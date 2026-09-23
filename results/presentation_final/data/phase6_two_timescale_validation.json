@@ -1,0 +1,105 @@
+{
+  "status": "PASS",
+  "scenario": {
+    "num_aps": 20,
+    "num_users": 5,
+    "num_targets": 2,
+    "num_antennas": 4,
+    "area_size": 500.0,
+    "T_total": 30,
+    "P_max": 1.0,
+    "alpha": 1.0,
+    "beta": 1.0,
+    "seed": 42,
+    "base_fast_seed": 7
+  },
+  "checks": {
+    "deterministic": true,
+    "per_step_power_feasible": true,
+    "multi_step_power_feasible": true,
+    "high_churn_zero_reconfigurations": true,
+    "zero_churn_gte_high_churn_reconfigurations": true,
+    "schedule_counts_correct": true
+  },
+  "comparison": {
+    "per_step": {
+      "label": "per_step (T_slow=1)",
+      "T_slow": 1,
+      "num_fast_updates": 30,
+      "num_slow_updates": 30,
+      "reconfiguration_count": 8,
+      "keep_count": 22,
+      "raw_churn_total": 136.0,
+      "communication_sum_rate_bps_total": 9709258718.998135,
+      "communication_sum_rate_bps_mean": 323641957.29993784,
+      "sensing_information_gain_total": 462.95629857421113,
+      "sensing_information_gain_mean": 15.431876619140372,
+      "power_feasible_all_steps": true,
+      "max_power_violation": 4.440892098500626e-16
+    },
+    "two_timescale": {
+      "label": "two_timescale (T_slow=5)",
+      "T_slow": 5,
+      "num_fast_updates": 30,
+      "num_slow_updates": 6,
+      "reconfiguration_count": 3,
+      "keep_count": 3,
+      "raw_churn_total": 82.0,
+      "communication_sum_rate_bps_total": 9828258203.496979,
+      "communication_sum_rate_bps_mean": 327608606.7832326,
+      "sensing_information_gain_total": 454.983094901443,
+      "sensing_information_gain_mean": 15.166103163381432,
+      "power_feasible_all_steps": true,
+      "max_power_violation": 4.440892098500626e-16
+    }
+  },
+  "churn_regimes": {
+    "zero_churn": {
+      "label": "zero_churn (lambda=0)",
+      "T_slow": 5,
+      "num_fast_updates": 30,
+      "num_slow_updates": 6,
+      "reconfiguration_count": 3,
+      "keep_count": 3,
+      "raw_churn_total": 82.0,
+      "communication_sum_rate_bps_total": 9828258203.496979,
+      "communication_sum_rate_bps_mean": 327608606.7832326,
+      "sensing_information_gain_total": 454.983094901443,
+      "sensing_information_gain_mean": 15.166103163381432,
+      "power_feasible_all_steps": true,
+      "max_power_violation": 4.440892098500626e-16
+    },
+    "low_churn": {
+      "label": "low_churn (lambda=0.1)",
+      "T_slow": 5,
+      "num_fast_updates": 30,
+      "num_slow_updates": 6,
+      "reconfiguration_count": 3,
+      "keep_count": 3,
+      "raw_churn_total": 82.0,
+      "communication_sum_rate_bps_total": 9828258203.496979,
+      "communication_sum_rate_bps_mean": 327608606.7832326,
+      "sensing_information_gain_total": 454.983094901443,
+      "sensing_information_gain_mean": 15.166103163381432,
+      "power_feasible_all_steps": true,
+      "max_power_violation": 4.440892098500626e-16
+    },
+    "high_churn": {
+      "label": "high_churn (lambda=1e9)",
+      "T_slow": 5,
+      "num_fast_updates": 30,
+      "num_slow_updates": 6,
+      "reconfiguration_count": 0,
+      "keep_count": 6,
+      "raw_churn_total": 158.0,
+      "communication_sum_rate_bps_total": 5806998894.339715,
+      "communication_sum_rate_bps_mean": 193566629.81132382,
+      "sensing_information_gain_total": 351.24972055436325,
+      "sensing_information_gain_mean": 11.708324018478775,
+      "power_feasible_all_steps": true,
+      "max_power_violation": 4.440892098500626e-16
+    }
+  },
+  "assumption_note": "The 'per-step predictive/churn policy' comparator is T_slow=1 of this same physical two-timescale code path, NOT the existing scalar-model end_to_end.PREDICTIVE+CHURN policy -- the two use different objective spaces (scalar vs physical) and are not directly comparable on sum-rate/information-gain. See module docstring.",
+  "failures": []
+}

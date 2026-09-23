@@ -1,0 +1,53 @@
+{
+  "phase5b": {
+    "status": "PASS",
+    "scenario": {
+      "M": 20,
+      "K": 5,
+      "N": 4,
+      "P_max": 1.0
+    }
+  },
+  "phase6": {
+    "status": "PASS",
+    "scenario": {
+      "num_aps": 20,
+      "num_users": 5,
+      "num_targets": 2,
+      "num_antennas": 4,
+      "area_size": 500.0,
+      "T_total": 30,
+      "P_max": 1.0,
+      "alpha": 1.0,
+      "beta": 1.0,
+      "seed": 42,
+      "base_fast_seed": 7
+    },
+    "per_step_reconfigurations": 8,
+    "two_timescale_reconfigurations": 3,
+    "per_step_mean_rate_mbps": 323.64195729993787,
+    "two_timescale_mean_rate_mbps": 327.60860678323263
+  },
+  "phase7": {
+    "status": "PASS",
+    "scenario": {
+      "num_aps": 20,
+      "num_users": 5,
+      "num_targets": 2,
+      "num_antennas": 4,
+      "area_size": 500.0,
+      "T_total": 30,
+      "T_slow": 5,
+      "P_max": 1.0,
+      "alpha_power": 1.0,
+      "beta_power": 1.0,
+      "seed": 42,
+      "base_fast_seed": 7,
+      "default_num_scenarios": 100,
+      "default_cvar_alpha": 0.9
+    },
+    "low_uncertainty_cvar": 14366650.72259071,
+    "medium_uncertainty_cvar": 20495486.629024822,
+    "high_uncertainty_cvar": 24002214.79959887
+  }
+}

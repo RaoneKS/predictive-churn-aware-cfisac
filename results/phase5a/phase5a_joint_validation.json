@@ -1,0 +1,644 @@
+{
+  "phase": "5A",
+  "title": "Physical communication-sensing bridge validation with explicit sensing power",
+  "scope": {
+    "communication_beamforming": "fixed MRT",
+    "joint_optimization": false,
+    "sensing_interference_in_comm_sinr": false,
+    "sensing_covariance_model": "isotropic",
+    "fim_model": "existing scalar bistatic Fisher-information model"
+  },
+  "config": {
+    "seed": 42,
+    "num_aps": 20,
+    "num_users": 5,
+    "num_targets": 2,
+    "num_antennas_per_ap": 4,
+    "per_ap_power_max_w": 1.0,
+    "fixed_communication_power_budget_w": 0.5,
+    "noise_power_sensing_w": 1e-09,
+    "reference_variance": 1.0
+  },
+  "topology": {
+    "communication_active_aps": [
+      2,
+      7,
+      8,
+      10,
+      12,
+      13,
+      14,
+      16,
+      17
+    ],
+    "sensing_active_aps": [
+      2,
+      7,
+      8,
+      10
+    ],
+    "y_tx": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "y_rx": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ]
+  },
+  "validation": {
+    "information_gain_non_decreasing": true,
+    "tracking_error_non_increasing": true,
+    "zero_sensing_gives_zero_sensing_power": true,
+    "over_budget_is_detected": true,
+    "budget_edge_is_feasible": true
+  },
+  "conditions": [
+    {
+      "condition": "zero_sensing",
+      "sensing_power_per_active_sensing_ap_w": 0.0,
+      "information_gain_per_target": [
+        0.0,
+        0.0
+      ],
+      "mean_information_gain": 0.0,
+      "tracking_error_per_target": [
+        2.0,
+        2.0
+      ],
+      "mean_tracking_error": 2.0,
+      "communication_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.49999999999999994,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4999999999999999,
+        0.49999999999999994,
+        0.0,
+        0.5000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "sensing_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "combined_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.49999999999999994,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4999999999999999,
+        0.49999999999999994,
+        0.0,
+        0.5000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "total_communication_power_w": 4.5,
+      "total_sensing_power_w": 0.0,
+      "total_combined_power_w": 4.5,
+      "max_combined_power_w": 0.5000000000000002,
+      "max_power_violation_w": 0.0,
+      "power_feasible": true
+    },
+    {
+      "condition": "low_sensing",
+      "sensing_power_per_active_sensing_ap_w": 0.1,
+      "information_gain_per_target": [
+        0.3765837628225952,
+        0.0959483715878692
+      ],
+      "mean_information_gain": 0.2362660672052322,
+      "tracking_error_per_target": [
+        1.6785163222444623,
+        1.907328731406591
+      ],
+      "mean_tracking_error": 1.7929225268255267,
+      "communication_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.49999999999999994,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4999999999999999,
+        0.49999999999999994,
+        0.0,
+        0.5000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "sensing_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.1,
+        0.1,
+        0.0,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "combined_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5999999999999999,
+        0.6,
+        0.0,
+        0.6000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "total_communication_power_w": 4.5,
+      "total_sensing_power_w": 0.4,
+      "total_combined_power_w": 4.9,
+      "max_combined_power_w": 0.6000000000000002,
+      "max_power_violation_w": 0.0,
+      "power_feasible": true
+    },
+    {
+      "condition": "medium_sensing",
+      "sensing_power_per_active_sensing_ap_w": 0.25,
+      "information_gain_per_target": [
+        0.78172713587526,
+        0.2284376949422813
+      ],
+      "mean_information_gain": 0.5050824154087706,
+      "tracking_error_per_target": [
+        1.425582515648111,
+        1.7893040429727134
+      ],
+      "mean_tracking_error": 1.607443279310412,
+      "communication_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.49999999999999994,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4999999999999999,
+        0.49999999999999994,
+        0.0,
+        0.5000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "sensing_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.25,
+        0.25,
+        0.0,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "combined_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.75,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.7499999999999999,
+        0.75,
+        0.0,
+        0.7500000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "total_communication_power_w": 4.5,
+      "total_sensing_power_w": 1.0,
+      "total_combined_power_w": 5.5,
+      "max_combined_power_w": 0.7500000000000002,
+      "max_power_violation_w": 0.0,
+      "power_feasible": true
+    },
+    {
+      "condition": "budget_edge",
+      "sensing_power_per_active_sensing_ap_w": 0.5,
+      "information_gain_per_target": [
+        1.2557538702327324,
+        0.42496437173375656
+      ],
+      "mean_information_gain": 0.8403591209832445,
+      "tracking_error_per_target": [
+        1.2051014228196522,
+        1.6325245773720702
+      ],
+      "mean_tracking_error": 1.4188130000958612,
+      "communication_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.49999999999999994,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4999999999999999,
+        0.49999999999999994,
+        0.0,
+        0.5000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "sensing_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.5,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "combined_power_per_ap_w": [
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.9999999999999999,
+        1.0,
+        0.0,
+        1.0000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "total_communication_power_w": 4.5,
+      "total_sensing_power_w": 2.0,
+      "total_combined_power_w": 6.5,
+      "max_combined_power_w": 1.0000000000000002,
+      "max_power_violation_w": 2.220446049250313e-16,
+      "power_feasible": true
+    },
+    {
+      "condition": "over_budget",
+      "sensing_power_per_active_sensing_ap_w": 0.6,
+      "information_gain_per_target": [
+        1.406042902875122,
+        0.49667631278747076
+      ],
+      "mean_information_gain": 0.9513596078312964,
+      "tracking_error_per_target": [
+        1.1462842664755726,
+        1.5800426852782077
+      ],
+      "mean_tracking_error": 1.36316347587689,
+      "communication_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.49999999999999994,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.4999999999999999,
+        0.49999999999999994,
+        0.0,
+        0.5000000000000002,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "sensing_power_per_ap_w": [
+        0.0,
+        0.0,
+        0.6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.6,
+        0.6,
+        0.0,
+        0.6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "combined_power_per_ap_w": [
+        0.0,
+        0.0,
+        1.0999999999999999,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0999999999999999,
+        1.0999999999999999,
+        0.0,
+        1.1,
+        0.0,
+        0.5,
+        0.49999999999999994,
+        0.5,
+        0.0,
+        0.5,
+        0.4999999999999999,
+        0.0,
+        0.0
+      ],
+      "total_communication_power_w": 4.5,
+      "total_sensing_power_w": 2.4,
+      "total_combined_power_w": 6.8999999999999995,
+      "max_combined_power_w": 1.1,
+      "max_power_violation_w": 0.10000000000000009,
+      "power_feasible": false
+    }
+  ]
+}

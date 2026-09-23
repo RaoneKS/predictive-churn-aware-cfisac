@@ -1,0 +1,3 @@
+setting,mean_sum_rate_mbps,mean_information_gain_nats
+T_slow = 1,323.64195729993787,15.431876619140372
+T_slow = 5,327.60860678323263,15.166103163381432

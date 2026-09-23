@@ -1,0 +1,26 @@
+{
+  "project": "Predictive Churn-Aware Overlapping User- and Target-Centric Clustering for Mobile Cell-Free ISAC Networks",
+  "source_results": [
+    "/home/raone/predictive-churn-aware-cfisac/results/phase5b/phase5b_joint_optimization_validation.json",
+    "/home/raone/predictive-churn-aware-cfisac/results/phase6/phase6_two_timescale_validation.json",
+    "/home/raone/predictive-churn-aware-cfisac/results/phase7/phase7_uncertainty_cvar_validation.json"
+  ],
+  "validation_status": {
+    "phase5b": "PASS",
+    "phase6": "PASS",
+    "phase7": "PASS"
+  },
+  "units": {
+    "information_gain": "nats (dimensionless; natural logarithm of covariance determinant ratio)",
+    "communication_rate": "Mbps",
+    "cvar": "combined-objective units; physical unit not specified in source JSON"
+  },
+  "figures": [
+    "01_phase5b_comm_sensing_tradeoff.png",
+    "02_phase6_reconfiguration_churn.png",
+    "03_phase6_communication_performance.png",
+    "04_phase7_uncertainty_cvar.png",
+    "05_phase7_riskaware_vs_deterministic.png",
+    "06_phase7_var_cvar_alpha.png"
+  ]
+}

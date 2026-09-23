@@ -1,0 +1,44 @@
+{
+  "config": {
+    "seed": 42,
+    "num_aps": 20,
+    "num_users": 5,
+    "aps_per_user": 3,
+    "num_antennas_per_ap": 4,
+    "tx_power_per_ap_w": 1.0,
+    "noise_power_w": 1e-09,
+    "bandwidth_hz": 20000000
+  },
+  "results": [
+    {
+      "condition": "scalar_baseline",
+      "avg_rate_mbps": 21.57713872612535,
+      "p5_rate_mbps": 11.890269822928287,
+      "avg_sinr_linear": 1.5718413173102121,
+      "avg_sinr_db": 1.9640870042156133,
+      "total_tx_power_w": 15.0,
+      "max_per_ap_power_w": 2.0,
+      "runtime_s": 7.954900502227247e-05
+    },
+    {
+      "condition": "mrt",
+      "avg_rate_mbps": 67.90037879339305,
+      "p5_rate_mbps": 48.61847567973695,
+      "avg_sinr_linear": 16.984724162097226,
+      "avg_sinr_db": 12.300584981679648,
+      "total_tx_power_w": 11.0,
+      "max_per_ap_power_w": 1.0000000000000002,
+      "runtime_s": 0.0001682860020082444
+    },
+    {
+      "condition": "rzf",
+      "avg_rate_mbps": 68.38137273979437,
+      "p5_rate_mbps": 50.57458605193156,
+      "avg_sinr_linear": 15.539351198224121,
+      "avg_sinr_db": 11.914328821023918,
+      "total_tx_power_w": 11.0,
+      "max_per_ap_power_w": 1.0000000000000004,
+      "runtime_s": 0.0006751870023435913
+    }
+  ]
+}

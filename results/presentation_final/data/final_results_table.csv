@@ -1,0 +1,6 @@
+phase,setting,communication_result,sensing_or_risk_result,presentation_message
+Phase 5B,β=0.01,380.643 Mbps,0.5013 nats,Near-zero communication rate cost for measurable sensing information
+Phase 5B,β=100,345.324 Mbps,2.6358 nats,Near-maximum sensing information with reduced communication rate
+Phase 6,T_slow=5 vs 1,327.609 vs 323.642 Mbps,3 vs 8 reconfigs,Fewer reconfigurations with comparable communication performance
+Phase 7,Low → Medium → High uncertainty,,14.37M → 20.50M → 24.00M CVaR,Tail risk increases with prediction uncertainty
+Phase 7,Medium uncertainty,327.609 vs 299.306 Mbps,3 vs 1 reconfigs,Risk-aware policy changes the stability/performance tradeoff

@@ -1,0 +1,95 @@
+network:
+  num_aps: 20
+  num_users: 5
+  num_targets: 2
+  area_size: 500.0
+
+simulation:
+  time_blocks: 100
+  dt: 1.0
+  prediction_horizon: 5
+
+communication:
+  bandwidth_hz: 20000000
+  min_rate_bps: 1000000
+
+sensing:
+  tracking_error_threshold: 1.0
+
+churn:
+  communication_cost: 1.0
+  sensing_tx_cost: 1.0
+  sensing_rx_cost: 1.0
+
+objective:
+  alpha_communication: 1.0
+  beta_sensing: 1.0
+  lambda_energy: 1.0
+  lambda_fronthaul: 1.0
+  lambda_churn: 1.0
+  # Horizon aggregation used by the PREDICTIVE+CHURN decision rule.
+  #   sum  : total predicted utility over the H-step horizon (DEFAULT)
+  #   mean : per-block average predicted utility (legacy Phase-2B)
+  # The candidate configuration is held across the whole horizon, so utility
+  # accrues H times while reconfiguration is paid once.  "sum" makes both
+  # sides of the comparison per-decision-epoch totals.  Dividing BOTH sides
+  # by H would be decision-equivalent to "sum"; dividing only the utility
+  # side ("mean") is not, and biases the policy toward KEEP by a factor of H.
+  horizon_aggregation: sum
+
+reference_values:
+  # Base physical references used to normalize metrics before objective weighting.
+  # This separates normalization (pure scaling to order ~1) from explicit objective importance (weights).
+  # normalized_value = raw_value / reference_value
+  communication_rate_bps: 10000000.0  # 10 Mbps reference
+  sensing_information_gain: 1.0       # 1.0 nat reference
+  energy_watts: 1.0                   # 1 Watt reference
+  fronthaul_links: 1.0                # 1 active link reference
+  # Maximum feasible raw weighted churn for ONE reconfiguration, so that
+  # normalized churn lies in [0, 1] like every other normalized term and
+  # lambda_churn is a pure preference weight rather than a hidden scale factor.
+  #
+  # Derivation (see src.clustering.churn.max_raw_churn_cost):
+  #   total_churn_cost sums |current - previous| over the binary assignment
+  #   matrices.  Clustering selects EXACTLY k APs per column, so a fully
+  #   disjoint reselection costs 2k per column (k depart + k arrive), not k.
+  #     communication : c_comm       * 2 * aps_per_user(3)      * num_users(5)   = 30
+  #     sensing TX    : c_sensing_tx * 2 * tx_aps_per_target(2) * num_targets(2) =  8
+  #     sensing RX    : c_sensing_rx * 2 * rx_aps_per_target(2) * num_targets(2) =  8
+  #                                                                        total = 46
+  #   Verified attainable empirically (worst observed = 46.0 over random pairs).
+  #   NOTE: one-directional "assignment event" counting would give 23, which is
+  #   NOT what total_churn_cost measures and would under-normalize by 2x.
+  #   Covered by tests/test_churn_normalization.py.
+  churn_events: 46.0
+  qos_violations: 1.0
+  tracking_violations: 1.0
+
+physical_layer:
+  # Phase 4A: per-antenna complex channel + MRT/RZF beamforming.
+  # This section is ADDITIVE. The existing scalar channel/SINR model
+  # (communication.* / metrics.system.communication_sinr/_rate) is
+  # unaffected by these values and does not read this section.
+  num_antennas_per_ap: 4
+  antenna_spacing: 0.5        # fraction of wavelength (0.5 = half-wave ULA)
+  rician_k_factor: 10.0       # linear K-factor for small-scale fading
+  small_scale_fading: true
+  rzf_epsilon_rel: 0.01       # relative RZF regularization (see cordis reference)
+  tx_power_per_ap_w: 1.0      # per-AP transmit power budget, linear Watts
+  noise_power_w: 1.0e-9       # matches the default used by the scalar path
+  seed: 42
+
+prediction:
+  history_length: 10        # L: number of past steps fed as input
+  prediction_horizon: 5     # H: number of future steps to forecast
+  hidden_size: 64           # LSTM hidden state dimension
+  num_layers: 2             # Number of stacked LSTM layers
+  dropout: 0.1              # Dropout probability between LSTM layers
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 200               # Max training epochs (early stopping will terminate earlier)
+  early_stopping_patience: 20  # Stop if val loss does not improve for this many epochs
+  train_ratio: 0.70
+  validation_ratio: 0.15
+  test_ratio: 0.15
+  seed: 42

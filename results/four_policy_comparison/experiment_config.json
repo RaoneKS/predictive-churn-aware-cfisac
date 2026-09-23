@@ -1,0 +1,7 @@
+{
+  "num_aps": 20,
+  "num_users": 5,
+  "num_targets": 2,
+  "time_blocks": 100,
+  "normalization_factor": 1e-06
+}

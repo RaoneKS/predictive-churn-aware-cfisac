@@ -1,0 +1,281 @@
+{
+  "config": {
+    "seed": 42,
+    "num_aps": 20,
+    "num_users": 5,
+    "aps_per_user": 2,
+    "num_antennas_per_ap": 4,
+    "tx_power_per_ap_w": 1.0,
+    "noise_power_w": 1e-09,
+    "bandwidth_hz": 20000000,
+    "target_sinr_linear": 1.0,
+    "bisection_tol": 0.01
+  },
+  "results": [
+    {
+      "condition": "mrt",
+      "avg_rate_mbps": 76.12653007180808,
+      "min_sinr_linear": 8.15011963860265,
+      "min_sinr_db": 9.111639839551414,
+      "avg_sinr_db": 13.340610545146447,
+      "total_tx_power_w": 8.999999999999998,
+      "max_per_ap_power_w": 1.0,
+      "runtime_s": 0.0001654799998505041
+    },
+    {
+      "condition": "rzf",
+      "avg_rate_mbps": 76.22003357084215,
+      "min_sinr_linear": 7.285049636773882,
+      "min_sinr_db": 8.624325151867993,
+      "avg_sinr_db": 13.30497284232816,
+      "total_tx_power_w": 9.0,
+      "max_per_ap_power_w": 1.0000000000000002,
+      "runtime_s": 0.0008820950024528429
+    },
+    {
+      "condition": "sinr_constrained(target=1.0)",
+      "avg_rate_mbps": 18.0,
+      "min_sinr_linear": 0.9999999999999994,
+      "min_sinr_db": -2.410818666383218e-15,
+      "avg_sinr_db": 0.0,
+      "total_tx_power_w": 1.5781258160155308e-06,
+      "max_per_ap_power_w": 2.110595427912443e-07,
+      "runtime_s": 0.002777959998638835,
+      "feasible": true,
+      "outer_iterations": 1,
+      "solver_reason": "Feasible: per-AP power constraints satisfied for the requested SINR target."
+    },
+    {
+      "condition": "sinr_constrained(bisection_max_min)",
+      "avg_rate_mbps": 408.3522229574504,
+      "min_sinr_linear": 6748962.910132643,
+      "min_sinr_db": 68.29237041422024,
+      "avg_sinr_db": 68.29237041553438,
+      "total_tx_power_w": 13.247922319111968,
+      "max_per_ap_power_w": 1.0009999987321254,
+      "runtime_s": 3.042249840000295,
+      "gamma_star_linear": 6748962.910470717,
+      "gamma_star_db": 68.2923704144378,
+      "bisection_steps": 31
+    }
+  ],
+  "bisection_history": [
+    {
+      "step": 0,
+      "mid": 6259350.571307512,
+      "feasible": true,
+      "low": 0.0,
+      "high": 12518701.142615024
+    },
+    {
+      "step": 1,
+      "mid": 9389025.856961269,
+      "feasible": false,
+      "low": 6259350.571307512,
+      "high": 12518701.142615024
+    },
+    {
+      "step": 2,
+      "mid": 7824188.2141343905,
+      "feasible": false,
+      "low": 6259350.571307512,
+      "high": 9389025.856961269
+    },
+    {
+      "step": 3,
+      "mid": 7041769.392720951,
+      "feasible": false,
+      "low": 6259350.571307512,
+      "high": 7824188.2141343905
+    },
+    {
+      "step": 4,
+      "mid": 6650559.982014231,
+      "feasible": true,
+      "low": 6259350.571307512,
+      "high": 7041769.392720951
+    },
+    {
+      "step": 5,
+      "mid": 6846164.687367591,
+      "feasible": false,
+      "low": 6650559.982014231,
+      "high": 7041769.392720951
+    },
+    {
+      "step": 6,
+      "mid": 6748362.334690912,
+      "feasible": true,
+      "low": 6650559.982014231,
+      "high": 6846164.687367591
+    },
+    {
+      "step": 7,
+      "mid": 6797263.511029251,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6846164.687367591
+    },
+    {
+      "step": 8,
+      "mid": 6772812.922860081,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6797263.511029251
+    },
+    {
+      "step": 9,
+      "mid": 6760587.628775496,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6772812.922860081
+    },
+    {
+      "step": 10,
+      "mid": 6754474.981733204,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6760587.628775496
+    },
+    {
+      "step": 11,
+      "mid": 6751418.658212058,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6754474.981733204
+    },
+    {
+      "step": 12,
+      "mid": 6749890.496451485,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6751418.658212058
+    },
+    {
+      "step": 13,
+      "mid": 6749126.415571198,
+      "feasible": false,
+      "low": 6748362.334690912,
+      "high": 6749890.496451485
+    },
+    {
+      "step": 14,
+      "mid": 6748744.375131055,
+      "feasible": true,
+      "low": 6748362.334690912,
+      "high": 6749126.415571198
+    },
+    {
+      "step": 15,
+      "mid": 6748935.395351127,
+      "feasible": true,
+      "low": 6748744.375131055,
+      "high": 6749126.415571198
+    },
+    {
+      "step": 16,
+      "mid": 6749030.905461162,
+      "feasible": false,
+      "low": 6748935.395351127,
+      "high": 6749126.415571198
+    },
+    {
+      "step": 17,
+      "mid": 6748983.150406145,
+      "feasible": false,
+      "low": 6748935.395351127,
+      "high": 6749030.905461162
+    },
+    {
+      "step": 18,
+      "mid": 6748959.272878636,
+      "feasible": true,
+      "low": 6748935.395351127,
+      "high": 6748983.150406145
+    },
+    {
+      "step": 19,
+      "mid": 6748971.21164239,
+      "feasible": false,
+      "low": 6748959.272878636,
+      "high": 6748983.150406145
+    },
+    {
+      "step": 20,
+      "mid": 6748965.242260513,
+      "feasible": false,
+      "low": 6748959.272878636,
+      "high": 6748971.21164239
+    },
+    {
+      "step": 21,
+      "mid": 6748962.257569574,
+      "feasible": true,
+      "low": 6748959.272878636,
+      "high": 6748965.242260513
+    },
+    {
+      "step": 22,
+      "mid": 6748963.749915043,
+      "feasible": false,
+      "low": 6748962.257569574,
+      "high": 6748965.242260513
+    },
+    {
+      "step": 23,
+      "mid": 6748963.003742308,
+      "feasible": false,
+      "low": 6748962.257569574,
+      "high": 6748963.749915043
+    },
+    {
+      "step": 24,
+      "mid": 6748962.630655941,
+      "feasible": true,
+      "low": 6748962.257569574,
+      "high": 6748963.003742308
+    },
+    {
+      "step": 25,
+      "mid": 6748962.817199124,
+      "feasible": true,
+      "low": 6748962.630655941,
+      "high": 6748963.003742308
+    },
+    {
+      "step": 26,
+      "mid": 6748962.910470717,
+      "feasible": true,
+      "low": 6748962.817199124,
+      "high": 6748963.003742308
+    },
+    {
+      "step": 27,
+      "mid": 6748962.957106512,
+      "feasible": false,
+      "low": 6748962.910470717,
+      "high": 6748963.003742308
+    },
+    {
+      "step": 28,
+      "mid": 6748962.933788614,
+      "feasible": false,
+      "low": 6748962.910470717,
+      "high": 6748962.957106512
+    },
+    {
+      "step": 29,
+      "mid": 6748962.9221296655,
+      "feasible": false,
+      "low": 6748962.910470717,
+      "high": 6748962.933788614
+    },
+    {
+      "step": 30,
+      "mid": 6748962.916300191,
+      "feasible": false,
+      "low": 6748962.910470717,
+      "high": 6748962.9221296655
+    }
+  ]
+}

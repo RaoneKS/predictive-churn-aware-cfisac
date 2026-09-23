@@ -1,0 +1,28 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+.env
+.env.*
+*.key
+*.pem
+*token*
+*secret*
+
+# Temporary/generated simulation artifacts
+sim.out
+*.log
+*.jou
+*.wdb
+
+# Python/checkpoint caches
+.ipynb_checkpoints/
+
+# Third-party/reference packages
+vendor/
