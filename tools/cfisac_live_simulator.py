@@ -43,6 +43,20 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# ---- Required session-state defaults ----
+_SESSION_DEFAULTS = {
+    "cvar_alpha": 0.90,
+    "enforce_deficiency_cvar": False,
+    "max_comm_cvar": 1_000_000.0,
+    "max_sensing_cvar": 1e-9,
+    "min_rate_bps": 1_000_000.0,
+    "epsilon_trk": 1e-9,
+}
+
+for _key, _value in _SESSION_DEFAULTS.items():
+    if _key not in st.session_state:
+        st.session_state[_key] = _value
+
 
 
 # ---------------------------------------------------------------------------
@@ -589,7 +603,7 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("Apply settings / restart", use_container_width=True):
+    if st.button("Apply settings / restart", width="stretch"):
         st.session_state.auto_run = False
         st.session_state.engine = make_engine()
         st.rerun()
@@ -676,27 +690,27 @@ c1, c2, c3, c4, c5 = st.columns([1.25, 1.0, 1.0, 1.0, 1.2])
 
 with c1:
     if st.session_state.auto_run:
-        if st.button("⏸  Pause", use_container_width=True, type="primary"):
+        if st.button("⏸  Pause", width="stretch", type="primary"):
             st.session_state.auto_run = False
             st.rerun()
     else:
-        if st.button("▶  Auto Run", use_container_width=True, type="primary"):
+        if st.button("▶  Auto Run", width="stretch", type="primary"):
             st.session_state.auto_run = True
             st.rerun()
 
 with c2:
-    if st.button("⏭  Next step", use_container_width=True):
+    if st.button("⏭  Next step", width="stretch"):
         st.session_state.auto_run = False
         engine.step_once()
         st.rerun()
 
 with c3:
-    if st.button("⚡  Evaluate", use_container_width=True):
+    if st.button("⚡  Evaluate", width="stretch"):
         engine.evaluate_current()
         st.rerun()
 
 with c4:
-    if st.button("↻  Reset", use_container_width=True):
+    if st.button("↻  Reset", width="stretch"):
         st.session_state.auto_run = False
         st.session_state.engine = make_engine()
         st.rerun()
@@ -765,7 +779,7 @@ with st.expander("Move a user or sensing target manually", expanded=False):
 
     d1, d2 = st.columns(2)
 
-    if d1.button("Move in +X direction", use_container_width=True):
+    if d1.button("Move in +X direction", width="stretch"):
         (
             engine.nudge_user
             if obj_type == "user"
@@ -774,7 +788,7 @@ with st.expander("Move a user or sensing target manually", expanded=False):
 
         st.rerun()
 
-    if d2.button("Move in +Y direction", use_container_width=True):
+    if d2.button("Move in +Y direction", width="stretch"):
         (
             engine.nudge_user
             if obj_type == "user"
@@ -1032,7 +1046,7 @@ st.markdown(
 
 st.plotly_chart(
     fig,
-    use_container_width=True,
+    width="stretch",
     config={
         "displaylogo": False,
         "scrollZoom": True,
@@ -1471,21 +1485,21 @@ with ca:
     st.markdown("**User ↔ AP communication**")
     st.dataframe(
         record["x"],
-        use_container_width=True,
+        width="stretch",
     )
 
 with cb:
     st.markdown("**Target ↔ AP sensing transmitters**")
     st.dataframe(
         record["y_tx"],
-        use_container_width=True,
+        width="stretch",
     )
 
 with cc:
     st.markdown("**Target ↔ AP sensing receivers**")
     st.dataframe(
         record["y_rx"],
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -1497,7 +1511,7 @@ with st.expander("Detailed runtime history", expanded=False):
 
     st.dataframe(
         hist,
-        use_container_width=True,
+        width="stretch",
     )
 
     csv = hist.to_csv(index=False).encode()
@@ -1507,7 +1521,7 @@ with st.expander("Detailed runtime history", expanded=False):
         csv,
         file_name="cfisac_live_runtime.csv",
         mime="text/csv",
-        use_container_width=True,
+        width="stretch",
     )
 
 
