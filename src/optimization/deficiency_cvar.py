@@ -107,3 +107,62 @@ def aggregate_deficiency_results(
         "communication": evaluate_deficiency_cvar(comm_def, alpha_comm),
         "sensing": evaluate_deficiency_cvar(sens_def, alpha_sens)
     }
+
+def evaluate_deficiency_constraints(
+    rates_scenarios: np.ndarray,
+    traces_scenarios: np.ndarray,
+    min_rate_bps: float,
+    epsilon_trk: np.ndarray,
+    max_comm_cvar: Optional[float] = None,
+    max_sensing_cvar: Optional[float] = None,
+    alpha_comm: float = 0.9,
+    alpha_sens: float = 0.9
+) -> Dict[str, Any]:
+    """
+    Evaluates deficiency CVaR limits for communication and sensing.
+
+    Parameters
+    ----------
+    ... (same parameters plus max constraints)
+
+    Returns
+    -------
+    dict
+        Contains constraint status, margins, maximum CVaR values, etc.
+    """
+    aggregated = aggregate_deficiency_results(
+        rates_scenarios, min_rate_bps,
+        traces_scenarios, epsilon_trk,
+        alpha_comm, alpha_sens
+    )
+
+    comm_cvars = [res.cvar for res in aggregated["communication"]]
+    sens_cvars = [res.cvar for res in aggregated["sensing"]]
+
+    max_c_cvar = float(np.max(comm_cvars)) if comm_cvars else 0.0
+    max_s_cvar = float(np.max(sens_cvars)) if sens_cvars else 0.0
+
+    comm_satisfied = True
+    comm_violation = 0.0
+    if max_comm_cvar is not None:
+        comm_violation = max(0.0, max_c_cvar - max_comm_cvar)
+        comm_satisfied = bool(max_c_cvar <= max_comm_cvar + 1e-8)
+
+    sens_satisfied = True
+    sens_violation = 0.0
+    if max_sensing_cvar is not None:
+        sens_violation = max(0.0, max_s_cvar - max_sensing_cvar)
+        sens_satisfied = bool(max_s_cvar <= max_sensing_cvar + 1e-15)
+
+    return {
+        "communication": aggregated["communication"],
+        "sensing": aggregated["sensing"],
+        "max_comm_cvar": max_c_cvar,
+        "max_sensing_cvar": max_s_cvar,
+        "comm_satisfied": comm_satisfied,
+        "sensing_satisfied": sens_satisfied,
+        "comm_violation": comm_violation,
+        "sensing_violation": sens_violation,
+        "satisfied": comm_satisfied and sens_satisfied,
+        "violation_amount": max(comm_violation, sens_violation)
+    }
