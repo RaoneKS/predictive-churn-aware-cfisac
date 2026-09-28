@@ -342,6 +342,7 @@ def fast_update(
         P_max,
         alpha=alpha,
         beta=beta,
+        x=x_tau,
         **joint_kwargs,
     )
 
