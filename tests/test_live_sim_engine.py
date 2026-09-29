@@ -48,6 +48,37 @@ class TestLiveCFISACEngine(unittest.TestCase):
         self.assertNotEqual(ref["churn_events"], 46.0)
         self.assertGreater(ref["churn_events"], 0.0)
 
+    def test_p1_mode_off(self):
+        e = self.make_engine()
+        e.cfg.p1_mode = False
+        rec = e.step_once()
+        self.assertFalse(rec.get("p1_mode", True))
+
+    def test_p1_mode_on(self):
+        e = self.make_engine()
+        e.cfg.p1_mode = True
+        e.cfg.p1_max_candidates = 5
+        e.step_once()
+        rec = e.step_once()
+        self.assertTrue(rec.get("p1_mode", False))
+        self.assertIn("p1_candidates", rec)
+        self.assertIn("p1_feasible", rec)
+        self.assertIn("p1_objective", rec)
+        self.assertIn("p1_comm_util", rec)
+        self.assertIn("p1_sens_util", rec)
+        self.assertIn("p1_energy", rec)
+        self.assertIn("p1_fronthaul", rec)
+        self.assertIn("p1_fallback", rec)
+
+    def test_p1_fallback_trigger(self):
+        e = self.make_engine()
+        e.cfg.p1_mode = True
+        e.cfg.p1_max_candidates = 5
+        e.cfg.enforce_qos = True
+        e.cfg.min_rate_bps = 1e15
+        e.step_once()
+        rec = e.step_once()
+        self.assertTrue(rec["p1_fallback"])
 
 if __name__ == "__main__":
     unittest.main()

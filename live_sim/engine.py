@@ -43,6 +43,8 @@ class LiveConfig:
     aps_per_user: int = 3
     tx_aps_per_target: int = 2
     rx_aps_per_target: int = 2
+    p1_mode: bool = False
+    p1_max_candidates: int = 20
     enforce_deficiency_cvar: bool = False
     max_comm_cvar: float = 1e6
     max_sensing_cvar: float = 1e-9
@@ -151,31 +153,81 @@ class LiveCFISACEngine:
         }
 
     def _slow_update(self) -> dict[str, Any]:
-        upd = risk_aware_slow_update(
-            self.sim,
-            self.predictor,
-            self.ap_positions,
-            self.x,
-            self.y_tx,
-            self.y_rx,
-            self.cfg.T_slow,
-            num_scenarios=self.cfg.num_scenarios,
-            alpha=self.cfg.cvar_alpha,
-            scenario_seed=self.cfg.seed + self.slow_epoch,
-            cluster_kwargs={
-                "aps_per_user": self.cfg.aps_per_user,
-                "tx_aps_per_target": self.cfg.tx_aps_per_target,
-                "rx_aps_per_target": self.cfg.rx_aps_per_target,
-            },
-            churn_kwargs={"lambda_churn": self.cfg.lambda_churn},
-            ref=self._ref(),
-            horizon_aggregation="sum",
-            enforce_deficiency_cvar=getattr(self.cfg, "enforce_deficiency_cvar", False),
-            max_comm_cvar=getattr(self.cfg, "max_comm_cvar", None),
-            max_sensing_cvar=getattr(self.cfg, "max_sensing_cvar", None),
-            min_rate_bps=getattr(self.cfg, "min_rate_bps", None),
-            epsilon_trk=__import__("numpy").full(self.cfg.num_targets, getattr(self.cfg, "epsilon_trk", 1e-9)) if getattr(self.cfg, "enforce_deficiency_cvar", False) else None,
-        )
+        if getattr(self.cfg, "p1_mode", False):
+            from src.optimization.p1_solver import solve_p1_decomposed
+            eps_trk = __import__("numpy").full(self.cfg.num_targets, getattr(self.cfg, "epsilon_trk", 1e-9)) if getattr(self.cfg, "epsilon_trk", None) is not None else None
+            upd = solve_p1_decomposed(
+                sim=self.sim,
+                predictor=self.predictor,
+                ap_positions=self.ap_positions,
+                num_antennas=self.cfg.num_antennas,
+                prev_x=self.x,
+                prev_y_tx=self.y_tx,
+                prev_y_rx=self.y_rx,
+                T_slow=self.cfg.T_slow,
+                P_max=self.cfg.P_max,
+                precoder=self.cfg.precoder,
+                alpha_power=self.cfg.alpha_power,
+                beta_power=self.cfg.beta_power,
+                cluster_kwargs={
+                    "aps_per_user": self.cfg.aps_per_user,
+                    "tx_aps_per_target": self.cfg.tx_aps_per_target,
+                    "rx_aps_per_target": self.cfg.rx_aps_per_target,
+                },
+                perf_kwargs={},
+                churn_kwargs={"lambda_churn": self.cfg.lambda_churn},
+                phys_kwargs={},
+                sens_kwargs={},
+                joint_kwargs={},
+                ref=self._ref(),
+                p1_max_candidates=getattr(self.cfg, "p1_max_candidates", 20),
+                seed=self.cfg.seed + self.slow_epoch,
+                horizon_aggregation="sum",
+                enforce_deficiency_cvar=getattr(self.cfg, "enforce_deficiency_cvar", False),
+                max_comm_cvar=getattr(self.cfg, "max_comm_cvar", None),
+                max_sensing_cvar=getattr(self.cfg, "max_sensing_cvar", None),
+                min_rate_bps=getattr(self.cfg, "min_rate_bps", None),
+                epsilon_trk=eps_trk,
+                enforce_qos=getattr(self.cfg, "enforce_qos", False),
+                num_scenarios=self.cfg.num_scenarios,
+                scenario_seed=self.cfg.seed + self.slow_epoch
+            )
+            # Adapt upd structure to look like decision_info for _record
+            upd["decision_info"] = {
+                "decision": "P1_RECONFIGURE" if not upd["fallback_used"] else "FALLBACK",
+                "raw_churn": upd["churn"],
+                "net_gain": upd["objective"],
+                "predicted_gain": upd["objective"],
+                "cvar_rejected": False,
+                "deficiency_cvar_results": upd.get("deficiency_cvar_results")
+            }
+        else:
+            upd = risk_aware_slow_update(
+                self.sim,
+                self.predictor,
+                self.ap_positions,
+                self.x,
+                self.y_tx,
+                self.y_rx,
+                self.cfg.T_slow,
+                num_scenarios=self.cfg.num_scenarios,
+                alpha=self.cfg.cvar_alpha,
+                scenario_seed=self.cfg.seed + self.slow_epoch,
+                cluster_kwargs={
+                    "aps_per_user": self.cfg.aps_per_user,
+                    "tx_aps_per_target": self.cfg.tx_aps_per_target,
+                    "rx_aps_per_target": self.cfg.rx_aps_per_target,
+                },
+                churn_kwargs={"lambda_churn": self.cfg.lambda_churn},
+                ref=self._ref(),
+                horizon_aggregation="sum",
+                enforce_deficiency_cvar=getattr(self.cfg, "enforce_deficiency_cvar", False),
+                max_comm_cvar=getattr(self.cfg, "max_comm_cvar", None),
+                max_sensing_cvar=getattr(self.cfg, "max_sensing_cvar", None),
+                min_rate_bps=getattr(self.cfg, "min_rate_bps", None),
+                epsilon_trk=__import__("numpy").full(self.cfg.num_targets, getattr(self.cfg, "epsilon_trk", 1e-9)) if getattr(self.cfg, "enforce_deficiency_cvar", False) else None,
+            )
+
         self.x = np.asarray(upd["x"], dtype=int)
         self.y_tx = np.asarray(upd["y_tx"], dtype=int)
         self.y_rx = np.asarray(upd["y_rx"], dtype=int)
@@ -183,7 +235,7 @@ class LiveCFISACEngine:
         self.slow_epoch += 1
 
         info = upd["decision_info"]
-        if info["decision"] == "RECONFIGURE":
+        if info["decision"] in ["RECONFIGURE", "P1_RECONFIGURE"]:
             self.reconfigurations += 1
             self.churn_total += float(info["raw_churn"])
         return upd
@@ -225,6 +277,10 @@ class LiveCFISACEngine:
         decision_info = (slow or self.last_slow or {}).get("decision_info", {})
         pred_users = (slow or self.last_slow or {}).get("pred_users")
         pred_targets = (slow or self.last_slow or {}).get("pred_targets")
+        p1_mode = getattr(self.cfg, "p1_mode", False)
+        p1_obj = (slow or self.last_slow or {}).get("objective", 0.0) if p1_mode else 0.0
+        p1_candidates = (slow or self.last_slow or {}).get("num_candidates_generated", 0) if p1_mode else 0
+        p1_feasible = p1_candidates - sum((slow or self.last_slow or {}).get("rejection_counts", {}).values()) if p1_mode else 0
         record = {
             "step": self.step,
             "advanced": advanced,
@@ -257,6 +313,15 @@ class LiveCFISACEngine:
             "pred_targets": None if pred_targets is None else np.asarray(pred_targets).copy(),
             "reconfigurations": self.reconfigurations,
             "churn_total": self.churn_total,
+            "p1_mode": p1_mode,
+            "p1_candidates": p1_candidates,
+            "p1_feasible": p1_feasible,
+            "p1_objective": p1_obj,
+            "p1_comm_util": (slow or self.last_slow or {}).get("comm_utility", 0.0) if p1_mode else 0.0,
+            "p1_sens_util": (slow or self.last_slow or {}).get("sensing_utility", 0.0) if p1_mode else 0.0,
+            "p1_energy": (slow or self.last_slow or {}).get("energy", 0.0) if p1_mode else 0.0,
+            "p1_fronthaul": (slow or self.last_slow or {}).get("fronthaul", 0.0) if p1_mode else 0.0,
+            "p1_fallback": (slow or self.last_slow or {}).get("fallback_used", False) if p1_mode else False,
         }
         self.records.append(record)
         return record
