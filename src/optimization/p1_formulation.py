@@ -42,22 +42,27 @@ Instead, the architecture decomposes P1 into a two-timescale heuristic
 ===========================================================================
 3. Enforcement vs Evaluation/Reporting
 ===========================================================================
-ENFORCED CONSTRAINTS:
-    - C4 (AP Power Budget): Enforced as sum_k c_{mk} + s_m <= P_m^max.
-    - C5 (Comm Association): W_dir forces zero power where x_{mk} = 0.
-    - C10 (Binary Variables): x, y^T, y^R, a are strictly binary.
-    - C11 (PSD Covariance): S_m is enforced via scalar s_m >= 0 with fixed basis.
+IMPLEMENTED DIRECTLY / P1 FORMULATION TRACEABILITY:
+    - x (Comm Association) -> Evaluated and optimized via `src/optimization/p1_solver.py`
+    - y_tx (Sensing TX Association) -> Evaluated and optimized via `src/optimization/p1_solver.py`
+    - y_rx (Sensing RX Association) -> Evaluated and optimized via `src/optimization/p1_solver.py`
+    - a (AP Activation) -> Derived explicitly in `ap_activation()` inside `p1_solver.py`
+    - W (Comm Beamforming) -> Optimized via `src/optimization/joint_comm_sensing.py`
+    - S (Sensing Covariance) -> Optimized via `src/optimization/joint_comm_sensing.py` parameterization.
+      NOTE: The current implementation uses the established scalar sensing-power/fixed-basis parameterization
+      and does NOT optimize a completely unrestricted matrix-valued S_m.
+    - C1 (Comm QoS) -> Enforced via hard QoS mode inside `joint_comm_sensing.py`
+    - C2 (Sensing Tracking) -> Enforced via tracking constraint / deficiency CVaR in `p1_solver.py` and `joint_comm_sensing.py`
+    - C3 (Fronthaul Capacity) -> Enforced via fronthaul feasibility filter in `p1_solver.py`
+    - C4 (AP Power Budget) -> Enforced by the joint optimizer in `joint_comm_sensing.py`
+    - C5 (Comm Association) -> Enforced via W_dir / topology filter in `p1_solver.py`
+    - C6 (Activation Consistency) -> Enforced via activation consistency filter in `p1_solver.py`
+    - C7 (Comm Cluster Size) -> Enforced via candidate filter in `p1_solver.py`
+    - C8 (Min Sensing TX APs) -> Enforced via candidate filter in `p1_solver.py`
+    - C9 (Min Sensing RX APs) -> Enforced via candidate filter in `p1_solver.py`
+    - C10 (Binary Variables) -> Enforced via validator filter in `p1_solver.py`
+    - C11 (PSD Covariance) -> Satisfied by construction via the existing sensing covariance parameterization.
 
-EVALUATION / REPORTING ONLY (by default):
-    - C1 (Comm QoS): Evaluated via deficiency L_k^C, unless `enforce_qos=True`
-      is explicitly provided to `optimize_joint_allocation`.
-    - C2 (Sensing Tracking): Evaluated via deficiency L_q^S, optionally enforced
-      in the continuous solver via `tracking_error_thresholds`. The chance-constraint
-      form is approximated by the risk-aware CVaR framework.
-    - C3 (Fronthaul Capacity): Evaluated at the end of the fast timescale. If exceeded,
-      the solution is marked `feasible=False`, but no solver natively projects onto C3.
-    - C7, C8, C9 (Cluster Sizes): Handled heuristically by the clustering algorithms
-      rather than hard bounds.
 """
 
 from typing import Dict, Any

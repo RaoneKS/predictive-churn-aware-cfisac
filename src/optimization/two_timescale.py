@@ -388,6 +388,8 @@ def run_two_timescale(
     joint_kwargs=None,
     base_seed=0,
     advance_sim=True,
+    p1_mode=False,
+    p1_kwargs=None,
 ):
     """
     Run the full two-timescale loop for T_total fast steps.

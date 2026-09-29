@@ -178,7 +178,10 @@ class LiveCFISACEngine:
                 churn_kwargs={"lambda_churn": self.cfg.lambda_churn},
                 phys_kwargs={},
                 sens_kwargs={},
-                joint_kwargs={},
+                joint_kwargs={
+                    "enforce_qos": getattr(self.cfg, "enforce_qos", False),
+                    "min_rate": getattr(self.cfg, "min_rate_bps", None),
+                },
                 ref=self._ref(),
                 p1_max_candidates=getattr(self.cfg, "p1_max_candidates", 20),
                 seed=self.cfg.seed + self.slow_epoch,

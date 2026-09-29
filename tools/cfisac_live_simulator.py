@@ -391,6 +391,8 @@ def make_engine() -> LiveCFISACEngine:
         max_sensing_cvar=st.session_state.max_sensing_cvar,
         min_rate_bps=st.session_state.min_rate_bps,
         epsilon_trk=st.session_state.epsilon_trk,
+        p1_mode=st.session_state.p1_mode,
+        p1_max_candidates=st.session_state.p1_max_candidates,
             lambda_churn=st.session_state.lambda_churn,
             seed=st.session_state.seed,
             base_fast_seed=7,
@@ -571,6 +573,17 @@ with st.sidebar:
         0.01,
     )
     
+
+    st.session_state.p1_mode = st.checkbox(
+        "Full P1 Decomposition Mode",
+        value=st.session_state.get("p1_mode", False)
+    )
+    if st.session_state.p1_mode:
+        st.session_state.p1_max_candidates = st.number_input(
+            "P1 Max Candidates",
+            1, 100, st.session_state.get("p1_max_candidates", 20),
+        )
+
     st.session_state.enforce_deficiency_cvar = st.checkbox(
         "Enforce Deficiency CVaR Constraints",
         value=st.session_state.get("enforce_deficiency_cvar", False)
