@@ -35,8 +35,20 @@ package pkg_accelerator;
   // -------------------------------------------------------------------------
   parameter MAC_LATENCY   = 3;     // MAC pipeline depth (input→mul→acc)
   parameter QUANT_LATENCY = 2;     // Quantization pipeline depth (ReLU→shift/sat)
-  parameter ARRAY_LATENCY = ARRAY_COLS + MAC_LATENCY; // 11 cycles through array
-  parameter TOTAL_LATENCY = ARRAY_LATENCY + QUANT_LATENCY + 2; // 15 cycles end-to-end
+  // PRIME_CYCLES: cycles from first valid activation entering the west boundary
+  // to first valid accumulator output emerging from bottom-row column sums.
+  // = ARRAY_COLS (activation east-hop latency)
+  //   + (ARRAY_COLS-1) (weight north-boundary column-skew depth for col 7)
+  //   + MAC_LATENCY (3-stage input-reg/multiply/accumulate pipeline)
+  //   = 8 + 7 + 3 = 18
+  // Note: ARRAY_LATENCY below was historically ARRAY_COLS+MAC_LATENCY=11, which
+  // omitted the (ARRAY_COLS-1) weight-skew stages. The correct prime latency is
+  // PRIME_CYCLES=18. TOTAL_LATENCY was 15 but the design is output-data-driven
+  // (quant_valid_pulse), so functional correctness was maintained regardless.
+  // Both constants are corrected here for documentation accuracy.
+  parameter ARRAY_LATENCY = ARRAY_COLS + (ARRAY_COLS-1) + MAC_LATENCY; // 18 (was 11)
+  parameter PRIME_CYCLES  = ARRAY_LATENCY;                              // 18 explicit alias
+  parameter TOTAL_LATENCY = ARRAY_LATENCY + QUANT_LATENCY; // 20 cycles end-to-end (was 15)
 
   // -------------------------------------------------------------------------
   // AXI4-Stream Interface Parameters
