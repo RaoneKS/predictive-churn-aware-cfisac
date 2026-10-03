@@ -4,7 +4,7 @@
 // Arithmetic:
 //   acc + bias -> optional ReLU -> arithmetic right shift -> zero point -> INT8 saturation
 
-` 1ns/1ps
+`timescale 1ns/1ps
 
 import pkg_accelerator::*;
 
