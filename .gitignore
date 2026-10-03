@@ -14,3 +14,39 @@ __pycache__/
 
 # Temporary timing reports
 critical_paths*.txt
+
+# Quartus generated build directories
+quartus/de10_standard_hw/db/
+quartus/de10_standard_hw/incremental_db/
+
+# Temporary timing/debug files
+quartus/de10_standard_hw/critical_paths*.txt
+
+# Python environments/cache
+.venv/
+__pycache__/
+*.pyc
+
+# Simulation outputs
+*.out
+sim.out
+
+# Logs
+*.log
+
+# Quartus generated build directories
+quartus/*/db/
+quartus/*/incremental_db/
+
+# Quartus generated files except the final programming image/reports
+quartus/*/output_files/*.done
+quartus/*/output_files/*.summary
+quartus/*/output_files/*.jdi
+quartus/*/output_files/*.pin
+quartus/*/output_files/*.sld
+quartus/*/output_files/*.smsg
+
+# Local RTL backups
+quartus/de10_standard_hw/*.before_c1_pipeline
+quartus/de10_standard_hw/*.before_c2_pipeline
+quartus/de10_standard_hw/*.dsp_backup
