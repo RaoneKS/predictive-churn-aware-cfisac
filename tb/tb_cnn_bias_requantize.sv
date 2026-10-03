@@ -1,4 +1,4 @@
-` 1ns/1ps
+`timescale 1ns/1ps
 
 module tb_cnn_bias_requantize;
   localparam LANES = 8;
