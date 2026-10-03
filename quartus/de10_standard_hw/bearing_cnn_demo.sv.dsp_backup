@@ -1,0 +1,433 @@
+// =============================================================================
+// Module: bearing_cnn_demo
+// Application-specific fixed-model accelerator for the Phase-3 CWRU CNN.
+//
+// Architecture
+//   - 64 parallel INT8 MAC datapaths (8 output lanes × 8 input lanes)
+//   - Conv1: 8 output channels, 5 tap cycles, all 8 outputs in parallel
+//   - MaxPool1D(2): all 8 channels in parallel
+//   - Conv2: 8 output channels, 3 flattened-K blocks × 8 MACs/block
+//   - GAP: signed truncating average over 128 samples
+//   - Classifier: 8 input lanes × 8 output lanes in parallel
+//
+// This module is the board-level application engine.  The generic
+// inference_accelerator_top remains in rtl/ as the reusable tiled accelerator
+// baseline and is verified independently.
+//
+// Model arithmetic is taken directly from ml/hardware_reference.py:
+// INT8 x INT8 -> INT32, bias before ReLU/shift, arithmetic right shift,
+// INT8 saturation.  GAP uses truncation toward zero for signed sums.
+//
+// Board demo:
+//   SW[1]=0 -> normal CWRU case
+//   SW[1]=1 -> outer-race case
+//   SW[0] rising edge -> start
+// =============================================================================
+module bearing_cnn_demo (
+  input  logic       clk,
+  input  logic       rst_n,
+  input  logic       start,
+  input  logic       select_outer,
+  output logic       busy,
+  output logic       done,
+  output logic [1:0] predicted_class,
+  output logic [3:0] state,
+  output logic [31:0] logits_out
+);
+
+  localparam int IDLE = 0;
+  localparam int C1   = 1;
+  localparam int POOL = 2;
+  localparam int C2   = 3;
+  localparam int GAP  = 4;
+  localparam int FC   = 5;
+  localparam int PICK = 6;
+  localparam int DONE = 7;
+
+  logic [3:0] st;
+
+  logic       select_latched;
+  logic [8:0] pos;       // 0..255 for Conv1, 0..127 afterwards
+  logic [2:0] tap;       // Conv1: 0..4
+  logic [1:0] c2_block;  // Conv2: 0..2, each block contains 8 flattened-K entries
+  logic [3:0] oc;
+
+  // ---------------------------------------------------------------------------
+  // Fixed model ROMs
+  // ---------------------------------------------------------------------------
+  logic signed [7:0]  input_rom [0:511];
+  logic signed [7:0]  c1_w     [0:63];
+  logic signed [7:0]  c2_w     [0:191];
+  logic signed [7:0]  fc_w     [0:63];
+
+  logic signed [31:0] c1_b [0:7];
+  logic signed [31:0] c2_b [0:7];
+  logic signed [31:0] fc_b [0:3];
+
+  // ---------------------------------------------------------------------------
+  // Intermediate feature memories
+  // ---------------------------------------------------------------------------
+  logic signed [7:0] c1_mem   [0:2047]; // 256 × 8
+  logic signed [7:0] pool_mem [0:1023]; // 128 × 8
+  logic signed [7:0] c2_mem   [0:1023]; // 128 × 8
+  logic signed [7:0] gap_mem  [0:7];
+  logic signed [7:0] logits   [0:7];
+
+  // ---------------------------------------------------------------------------
+  // 8 output accumulators.  The loops below are intentionally fixed-size;
+  // synthesis unrolls them into parallel MAC/add datapaths.
+  // ---------------------------------------------------------------------------
+  logic signed [31:0] c1_acc [0:7];
+  logic signed [31:0] c2_acc [0:7];
+  logic signed [31:0] fc_acc [0:7];
+  logic signed [31:0] gap_acc[0:7];
+
+  integer i;
+  integer idx;
+  integer sample_idx;
+  integer kidx;
+  integer tmp;
+  logic signed [31:0] acc_tmp;
+  logic signed [31:0] product_tmp;
+
+  // ---------------------------------------------------------------------------
+  // Exact deployment arithmetic
+  // ---------------------------------------------------------------------------
+  function automatic logic signed [31:0] mul8(
+      input logic signed [7:0] a,
+      input logic signed [7:0] b
+  );
+    logic signed [15:0] p;
+    begin
+      p = a * b;
+      mul8 = {{16{p[15]}}, p};
+    end
+  endfunction
+
+  function automatic logic signed [7:0] quantize32(
+      input logic signed [31:0] value,
+      input logic [4:0] shift,
+      input logic relu_en
+  );
+    logic signed [31:0] tmp_q;
+    begin
+      tmp_q = relu_en && value[31] ? 32'sd0 : value;
+      tmp_q = tmp_q >>> shift;
+
+      if (tmp_q > 32'sd127)
+        quantize32 = 8'sd127;
+      else if (tmp_q < -32'sd128)
+        quantize32 = -8'sd128;
+      else
+        quantize32 = tmp_q[7:0];
+    end
+  endfunction
+
+  // Exact truncation toward zero for division by 128.
+  function automatic logic signed [7:0] gap_div128(
+      input logic signed [31:0] value
+  );
+    logic signed [31:0] mag;
+    logic signed [31:0] q;
+    begin
+      if (value >= 0)
+        q = value >>> 7;
+      else begin
+        mag = -value;
+        q = -(mag >>> 7);
+      end
+
+      if (q > 32'sd127)
+        gap_div128 = 8'sd127;
+      else if (q < -32'sd128)
+        gap_div128 = -8'sd128;
+      else
+        gap_div128 = q[7:0];
+    end
+  endfunction
+
+  // ---------------------------------------------------------------------------
+  // Model initialization
+  // ---------------------------------------------------------------------------
+  initial begin
+    $readmemh("model_data/demo_inputs.hex",        input_rom);
+    $readmemh("model_data/conv1_weights.hex",      c1_w);
+    $readmemh("model_data/conv1_bias.hex",         c1_b);
+    $readmemh("model_data/conv2_weights.hex",      c2_w);
+    $readmemh("model_data/conv2_bias.hex",         c2_b);
+    $readmemh("model_data/classifier_weights.hex", fc_w);
+    $readmemh("model_data/classifier_bias.hex",    fc_b);
+  end
+
+  // ---------------------------------------------------------------------------
+  // State machine
+  // ---------------------------------------------------------------------------
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      st <= IDLE;
+      pos <= '0;
+      tap <= '0;
+      c2_block <= '0;
+      oc <= '0;
+      select_latched <= 1'b0;
+      predicted_class <= '0;
+
+      for (i = 0; i < 8; i = i + 1) begin
+        c1_acc[i]  <= '0;
+        c2_acc[i]  <= '0;
+        fc_acc[i]  <= '0;
+        gap_acc[i] <= '0;
+        gap_mem[i] <= '0;
+        logits[i]  <= '0;
+      end
+    end else begin
+      case (st)
+
+        // ---------------------------------------------------------------------
+        // Conv1: 256 positions × 5 taps.
+        // Same padding is implemented by returning zero outside [0,255].
+        // Eight output channels are computed in parallel.
+        // ---------------------------------------------------------------------
+        C1: begin
+          for (i = 0; i < 8; i = i + 1) begin
+            sample_idx = pos + tap;
+            if ((sample_idx >= 2) && (sample_idx < 258))
+              sample_idx = (select_latched ? 256 : 0) + sample_idx - 2;
+            else
+              sample_idx = -1;
+
+            if (sample_idx >= 0)
+              product_tmp = mul8(input_rom[sample_idx], c1_w[tap*8+i]);
+            else
+              product_tmp = 32'sd0;
+
+            acc_tmp = c1_acc[i] + product_tmp;
+
+            if (tap == 4) begin
+              c1_mem[pos*8+i] <= quantize32(acc_tmp + c1_b[i], 5'd8, 1'b1);
+              c1_acc[i] <= '0;
+            end else begin
+              c1_acc[i] <= acc_tmp;
+            end
+          end
+
+          if (tap == 4) begin
+            tap <= '0;
+            if (pos == 255) begin
+              pos <= '0;
+              oc <= '0;
+              st <= POOL;
+            end else begin
+              pos <= pos + 1'b1;
+            end
+          end else begin
+            tap <= tap + 1'b1;
+          end
+        end
+
+        // ---------------------------------------------------------------------
+        // MaxPool1D(2): 128 positions × 8 channels, all channels in parallel.
+        // ---------------------------------------------------------------------
+        POOL: begin
+          for (i = 0; i < 8; i = i + 1) begin
+            if (c1_mem[(pos*2)*8+i] >= c1_mem[(pos*2+1)*8+i])
+              pool_mem[pos*8+i] <= c1_mem[(pos*2)*8+i];
+            else
+              pool_mem[pos*8+i] <= c1_mem[(pos*2+1)*8+i];
+          end
+
+          if (pos == 127) begin
+            pos <= '0;
+            c2_block <= '0;
+            for (i = 0; i < 8; i = i + 1)
+              c2_acc[i] <= '0;
+            st <= C2;
+          end else begin
+            pos <= pos + 1'b1;
+          end
+        end
+
+        // ---------------------------------------------------------------------
+        // Conv2: K=24 = three blocks of eight input-channel/tap elements.
+        // 64 products are formed per cycle: 8 input lanes × 8 output lanes.
+        // Flattened K ordering is channel-major then kernel tap, matching
+        // hardware_reference.py.
+        // ---------------------------------------------------------------------
+        C2: begin
+          for (i = 0; i < 8; i = i + 1) begin
+            acc_tmp = c2_acc[i];
+
+for (idx = 0; idx < 8; idx = idx + 1) begin
+  // Conv2 flattened K ordering is channel-major:
+  //   kidx = input_channel * 3 + kernel_tap
+  // The three 8-element blocks are fixed:
+  //   block 0: kidx  0..7
+  //   block 1: kidx  8..15
+  //   block 2: kidx 16..23
+  kidx = (c2_block << 3) + idx;
+
+  // Avoid synthesizing /3 and %3 hardware.
+  // Since kidx is 0..23, these are equivalent fixed mappings.
+  case (kidx)
+    0:  begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+0], c2_w[0*8+i]) : 32'sd0; end
+    1:  begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+0], c2_w[1*8+i]) : 32'sd0; end
+    2:  begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+0], c2_w[2*8+i]) : 32'sd0; end
+
+    3:  begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+1], c2_w[3*8+i]) : 32'sd0; end
+    4:  begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+1], c2_w[4*8+i]) : 32'sd0; end
+    5:  begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+1], c2_w[5*8+i]) : 32'sd0; end
+
+    6:  begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+2], c2_w[6*8+i]) : 32'sd0; end
+    7:  begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+2], c2_w[7*8+i]) : 32'sd0; end
+
+    8:  begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+2], c2_w[8*8+i]) : 32'sd0; end
+    9:  begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+3], c2_w[9*8+i]) : 32'sd0; end
+    10: begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+3], c2_w[10*8+i]) : 32'sd0; end
+    11: begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+3], c2_w[11*8+i]) : 32'sd0; end
+
+    12: begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+4], c2_w[12*8+i]) : 32'sd0; end
+    13: begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+4], c2_w[13*8+i]) : 32'sd0; end
+    14: begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+4], c2_w[14*8+i]) : 32'sd0; end
+
+    15: begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+5], c2_w[15*8+i]) : 32'sd0; end
+
+    16: begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+5], c2_w[16*8+i]) : 32'sd0; end
+    17: begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+5], c2_w[17*8+i]) : 32'sd0; end
+
+    18: begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+6], c2_w[18*8+i]) : 32'sd0; end
+    19: begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+6], c2_w[19*8+i]) : 32'sd0; end
+    20: begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+6], c2_w[20*8+i]) : 32'sd0; end
+
+    21: begin sample_idx = pos;     product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+7], c2_w[21*8+i]) : 32'sd0; end
+    22: begin sample_idx = pos + 1; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+7], c2_w[22*8+i]) : 32'sd0; end
+    23: begin sample_idx = pos + 2; product_tmp = ((sample_idx >= 1) && (sample_idx < 129)) ? mul8(pool_mem[(sample_idx-1)*8+7], c2_w[23*8+i]) : 32'sd0; end
+
+    default: begin
+      sample_idx = -1;
+      product_tmp = 32'sd0;
+    end
+  endcase
+
+  acc_tmp = acc_tmp + product_tmp;
+end
+            if (c2_block == 2) begin
+              c2_mem[pos*8+i] <= quantize32(acc_tmp + c2_b[i], 5'd8, 1'b1);
+              c2_acc[i] <= '0;
+            end else begin
+              c2_acc[i] <= acc_tmp;
+            end
+          end
+
+          if (c2_block == 2) begin
+            c2_block <= '0;
+            if (pos == 127) begin
+              pos <= '0;
+              for (i = 0; i < 8; i = i + 1)
+                gap_acc[i] <= '0;
+              st <= GAP;
+            end else begin
+              pos <= pos + 1'b1;
+            end
+          end else begin
+            c2_block <= c2_block + 1'b1;
+          end
+        end
+
+        // ---------------------------------------------------------------------
+        // GAP: accumulate one spatial sample per cycle for all 8 channels.
+        // The final division is truncation toward zero, exactly as exported.
+        // ---------------------------------------------------------------------
+        GAP: begin
+          for (i = 0; i < 8; i = i + 1) begin
+            acc_tmp = gap_acc[i] + $signed(c2_mem[pos*8+i]);
+            if (pos == 127) begin
+              gap_mem[i] <= gap_div128(acc_tmp);
+              gap_acc[i] <= '0;
+            end else begin
+              gap_acc[i] <= acc_tmp;
+            end
+          end
+
+          if (pos == 127) begin
+            pos <= '0;
+            oc <= '0;
+            for (i = 0; i < 8; i = i + 1)
+              fc_acc[i] <= '0;
+            st <= FC;
+          end else begin
+            pos <= pos + 1'b1;
+          end
+        end
+
+        // ---------------------------------------------------------------------
+        // Classifier: all 8 input lanes × 8 output lanes in one cycle.
+        // Only logits 0..3 are used for the final class.
+        // ---------------------------------------------------------------------
+        FC: begin
+          for (i = 0; i < 8; i = i + 1) begin
+            acc_tmp = '0;
+            for (idx = 0; idx < 8; idx = idx + 1)
+              acc_tmp = acc_tmp + mul8(gap_mem[idx], fc_w[idx*8+i]);
+
+            if (i < 4)
+              logits[i] <= quantize32(acc_tmp + fc_b[i], 5'd5, 1'b0);
+            else
+              logits[i] <= quantize32(acc_tmp, 5'd5, 1'b0);
+          end
+          st <= PICK;
+        end
+
+        // ---------------------------------------------------------------------
+        // Argmax with deterministic lowest-index tie break.
+        // ---------------------------------------------------------------------
+        PICK: begin
+          if ((logits[1] > logits[0]) &&
+              (logits[1] >= logits[2]) &&
+              (logits[1] >= logits[3]))
+            predicted_class <= 2'd1;
+          else if ((logits[2] > logits[0]) &&
+                   (logits[2] > logits[1]) &&
+                   (logits[2] >= logits[3]))
+            predicted_class <= 2'd2;
+          else if ((logits[3] > logits[0]) &&
+                   (logits[3] > logits[1]) &&
+                   (logits[3] > logits[2]))
+            predicted_class <= 2'd3;
+          else
+            predicted_class <= 2'd0;
+          st <= DONE;
+        end
+
+        DONE: begin
+          if (!start)
+            st <= IDLE;
+        end
+
+        IDLE: begin
+          if (start) begin
+            select_latched <= select_outer;
+            pos <= '0;
+            tap <= '0;
+            c2_block <= '0;
+            oc <= '0;
+            for (i = 0; i < 8; i = i + 1) begin
+              c1_acc[i]  <= '0;
+              c2_acc[i]  <= '0;
+              fc_acc[i]  <= '0;
+              gap_acc[i] <= '0;
+            end
+            st <= C1;
+          end
+        end
+
+        default: st <= IDLE;
+      endcase
+    end
+  end
+
+  assign busy = (st != IDLE) && (st != DONE);
+  assign done = (st == DONE);
+  assign state = st;
+  assign logits_out = {logits[3], logits[2], logits[1], logits[0]};
+
+endmodule

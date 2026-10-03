@@ -1,0 +1,16 @@
+# Quartus generated files
+quartus/de10_standard_hw/db/
+quartus/de10_standard_hw/incremental_db/
+quartus/de10_standard_hw/output_files/*.rpt
+quartus/de10_standard_hw/output_files/*.smsg
+quartus/de10_standard_hw/output_files/*.qws
+quartus/de10_standard_hw/output_files/*.bak
+
+# Simulation/generated files
+*.out
+sim.out
+__pycache__/
+*.pyc
+
+# Temporary timing reports
+critical_paths*.txt

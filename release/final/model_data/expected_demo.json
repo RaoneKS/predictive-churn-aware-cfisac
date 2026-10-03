@@ -1,0 +1,24 @@
+[
+  {
+    "switch": false,
+    "label": "normal",
+    "class": 0,
+    "logits": [
+      39,
+      2,
+      -36,
+      -51
+    ]
+  },
+  {
+    "switch": true,
+    "label": "outer",
+    "class": 3,
+    "logits": [
+      -33,
+      3,
+      9,
+      15
+    ]
+  }
+]

@@ -1,0 +1,325 @@
++ set -euo pipefail
++++ dirname quartus/de10_standard_hw/run_quartus.sh
+++ cd quartus/de10_standard_hw
+++ pwd
++ project_dir=/home/raone/fpga-ai-accelerator/quartus/de10_standard_hw
++ quartus_sh_bin=/home/raone/intelFPGA/23.1std/quartus/bin/quartus_sh
++ cd /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw
++ /home/raone/intelFPGA/23.1std/quartus/bin/quartus_sh --flow compile de10_standard_hw
+Info: *******************************************************************
+Info: Running Quartus Prime Shell
+    Info: Version 23.1std.1 Build 993 05/14/2024 SC Standard Edition
+    Info: Copyright (C) 2024  Intel Corporation. All rights reserved.
+    Info: Your use of Intel Corporation's design tools, logic functions 
+    Info: and other software and tools, and any partner logic 
+    Info: functions, and any output files from any of the foregoing 
+    Info: (including device programming or simulation files), and any 
+    Info: associated documentation or information are expressly subject 
+    Info: to the terms and conditions of the Intel Program License 
+    Info: Subscription Agreement, the Intel Quartus Prime License Agreement,
+    Info: the Intel FPGA IP License Agreement, or other applicable license
+    Info: agreement, including, without limitation, that your use is for
+    Info: the sole purpose of programming logic devices manufactured by
+    Info: Intel and sold by Intel or its authorized distributors.  Please
+    Info: refer to the applicable agreement for further details, at
+    Info: https://fpgasoftware.intel.com/eula.
+    Info: Processing started: Wed Sep 23 04:13:52 2026
+Info: Command: quartus_sh --flow compile de10_standard_hw
+Info: Quartus(args): compile de10_standard_hw
+Info: Project Name = /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw
+Info: Revision Name = de10_standard_hw
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info: *******************************************************************
+Info: Running Quartus Prime Analysis & Synthesis
+    Info: Version 23.1std.1 Build 993 05/14/2024 SC Standard Edition
+    Info: Processing started: Wed Sep 23 04:13:53 2026
+Info: Command: quartus_map --read_settings_files=on --write_settings_files=off de10_standard_hw -c de10_standard_hw
+Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
+Info (20030): Parallel compilation is enabled and will use 8 of the 8 processors detected
+Warning (10259): Verilog HDL error at pkg_accelerator.sv(156): constant value overflow File: /home/raone/fpga-ai-accelerator/rtl/pkg_accelerator.sv Line: 156
+Info (12021): Found 1 design units, including 0 entities, in source file /home/raone/fpga-ai-accelerator/rtl/pkg_accelerator.sv
+    Info (12022): Found design unit 1: pkg_accelerator (SystemVerilog) File: /home/raone/fpga-ai-accelerator/rtl/pkg_accelerator.sv Line: 17
+Warning (10335): Unrecognized synthesis attribute "use_dsp" at ../../rtl/mac_unit.sv(79) File: /home/raone/fpga-ai-accelerator/rtl/mac_unit.sv Line: 79
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/mac_unit.sv
+    Info (12023): Found entity 1: mac_unit File: /home/raone/fpga-ai-accelerator/rtl/mac_unit.sv Line: 25
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/systolic_array.sv
+    Info (12023): Found entity 1: systolic_array File: /home/raone/fpga-ai-accelerator/rtl/systolic_array.sv Line: 27
+Warning (10335): Unrecognized synthesis attribute "ram_style" at ../../rtl/sram_controller.sv(52) File: /home/raone/fpga-ai-accelerator/rtl/sram_controller.sv Line: 52
+Warning (10335): Unrecognized synthesis attribute "DONT_TOUCH" at ../../rtl/sram_controller.sv(52) File: /home/raone/fpga-ai-accelerator/rtl/sram_controller.sv Line: 52
+Warning (10335): Unrecognized synthesis attribute "ram_style" at ../../rtl/sram_controller.sv(55) File: /home/raone/fpga-ai-accelerator/rtl/sram_controller.sv Line: 55
+Warning (10335): Unrecognized synthesis attribute "DONT_TOUCH" at ../../rtl/sram_controller.sv(55) File: /home/raone/fpga-ai-accelerator/rtl/sram_controller.sv Line: 55
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/sram_controller.sv
+    Info (12023): Found entity 1: sram_controller File: /home/raone/fpga-ai-accelerator/rtl/sram_controller.sv Line: 24
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/axi_stream_input.sv
+    Info (12023): Found entity 1: axi_stream_input File: /home/raone/fpga-ai-accelerator/rtl/axi_stream_input.sv Line: 27
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/axi_stream_output.sv
+    Info (12023): Found entity 1: axi_stream_output File: /home/raone/fpga-ai-accelerator/rtl/axi_stream_output.sv Line: 19
+Warning (10259): Verilog HDL error at quantize_unit.sv(109): constant value overflow File: /home/raone/fpga-ai-accelerator/rtl/quantize_unit.sv Line: 109
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/quantize_unit.sv
+    Info (12023): Found entity 1: quantize_unit File: /home/raone/fpga-ai-accelerator/rtl/quantize_unit.sv Line: 22
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/layer_ctrl_fsm.sv
+    Info (12023): Found entity 1: layer_ctrl_fsm File: /home/raone/fpga-ai-accelerator/rtl/layer_ctrl_fsm.sv Line: 35
+Info (12021): Found 1 design units, including 1 entities, in source file /home/raone/fpga-ai-accelerator/rtl/inference_accelerator_top.sv
+    Info (12023): Found entity 1: inference_accelerator_top File: /home/raone/fpga-ai-accelerator/rtl/inference_accelerator_top.sv Line: 28
+Warning (10335): Unrecognized synthesis attribute "unrolls" at bearing_cnn_demo.sv(78) File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 78
+Warning (10335): Unrecognized synthesis attribute "them" at bearing_cnn_demo.sv(78) File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 78
+Warning (10335): Unrecognized synthesis attribute "into" at bearing_cnn_demo.sv(78) File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 78
+Warning (10335): Unrecognized synthesis attribute "parallel" at bearing_cnn_demo.sv(78) File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 78
+Warning (10335): Unrecognized synthesis attribute "MAC" at bearing_cnn_demo.sv(78) File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 78
+Warning (10259): Verilog HDL error at bearing_cnn_demo.sv(120): constant value overflow File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 120
+Warning (10259): Verilog HDL error at bearing_cnn_demo.sv(143): constant value overflow File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 143
+Info (12021): Found 1 design units, including 1 entities, in source file bearing_cnn_demo.sv
+    Info (12023): Found entity 1: bearing_cnn_demo File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 26
+Info (12021): Found 1 design units, including 1 entities, in source file de10_standard_hw_top.sv
+    Info (12023): Found entity 1: de10_standard_hw_top File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw_top.sv Line: 3
+Info (12127): Elaborating entity "de10_standard_hw_top" for the top level hierarchy
+Info (12128): Elaborating entity "bearing_cnn_demo" for hierarchy "bearing_cnn_demo:u_demo" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw_top.sv Line: 32
+Warning (10036): Verilog HDL or VHDL warning at bearing_cnn_demo.sv(53): object "oc" assigned a value but never read File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 53
+Warning (10036): Verilog HDL or VHDL warning at bearing_cnn_demo.sv(82): object "fc_acc" assigned a value but never read File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 82
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (278001): Inferred 16 megafunctions from design logic
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div7" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod7" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div2" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod2" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div1" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod1" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div0" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod0" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod5" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div6" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod6" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div5" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod3" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div4" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Mod4" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "bearing_cnn_demo:u_demo|Div3" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div7" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div7" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12021): Found 1 design units, including 1 entities, in source file db/lpm_divide_qno.tdf
+    Info (12023): Found entity 1: lpm_divide_qno File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/lpm_divide_qno.tdf Line: 25
+Info (12021): Found 1 design units, including 1 entities, in source file db/abs_divider_3ag.tdf
+    Info (12023): Found entity 1: abs_divider_3ag File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/abs_divider_3ag.tdf Line: 29
+Info (12021): Found 1 design units, including 1 entities, in source file db/alt_u_div_mse.tdf
+    Info (12023): Found entity 1: alt_u_div_mse File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/alt_u_div_mse.tdf Line: 23
+Info (12021): Found 1 design units, including 1 entities, in source file db/lpm_abs_in9.tdf
+    Info (12023): Found entity 1: lpm_abs_in9 File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/lpm_abs_in9.tdf Line: 23
+Info (12021): Found 1 design units, including 1 entities, in source file db/lpm_abs_ln9.tdf
+    Info (12023): Found entity 1: lpm_abs_ln9 File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/lpm_abs_ln9.tdf Line: 23
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod7" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod7" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12021): Found 1 design units, including 1 entities, in source file db/lpm_divide_32m.tdf
+    Info (12023): Found entity 1: lpm_divide_32m File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/lpm_divide_32m.tdf Line: 25
+Info (12021): Found 1 design units, including 1 entities, in source file db/sign_div_unsign_6kh.tdf
+    Info (12023): Found entity 1: sign_div_unsign_6kh File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/sign_div_unsign_6kh.tdf Line: 25
+Info (12021): Found 1 design units, including 1 entities, in source file db/alt_u_div_ise.tdf
+    Info (12023): Found entity 1: alt_u_div_ise File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/db/alt_u_div_ise.tdf Line: 23
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div2" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div2" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod2" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod2" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div1" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div1" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod1" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod1" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div0" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div0" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod0" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod0" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod5" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod5" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div6" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div6" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod6" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod6" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div5" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div5" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod3" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod3" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div4" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div4" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Mod4" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Mod4" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 263
+    Info (12134): Parameter "LPM_WIDTHN" = "5"
+    Info (12134): Parameter "LPM_WIDTHD" = "2"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "UNSIGNED"
+Info (12130): Elaborated megafunction instantiation "bearing_cnn_demo:u_demo|lpm_divide:Div3" File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+Info (12133): Instantiated megafunction "bearing_cnn_demo:u_demo|lpm_divide:Div3" with the following parameter: File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/bearing_cnn_demo.sv Line: 266
+    Info (12134): Parameter "LPM_WIDTHN" = "6"
+    Info (12134): Parameter "LPM_WIDTHD" = "3"
+    Info (12134): Parameter "LPM_NREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_DREPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "LPM_HINT" = "LPM_REMAINDERPOSITIVE=FALSE"
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Warning (13024): Output pins are stuck at VCC or GND
+    Warning (13410): Pin "LEDR[5]" is stuck at GND File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw_top.sv Line: 8
+    Warning (13410): Pin "LEDR[9]" is stuck at GND File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw_top.sv Line: 8
+Info (286030): Timing-Driven Synthesis is running
+Info (17049): 4 registers lost all their fanouts during netlist optimizations.
+Info (144001): Generated suppressed messages file /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/output_files/de10_standard_hw.map.smsg
+Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
+    Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
+Info (21057): Implemented 65290 device resources after synthesis - the final resource count might be different
+    Info (21058): Implemented 4 input pins
+    Info (21059): Implemented 10 output pins
+    Info (21061): Implemented 65176 logic cells
+    Info (21062): Implemented 100 DSP elements
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 20 warnings
+    Info: Peak virtual memory: 1121 megabytes
+    Info: Processing ended: Wed Sep 23 04:15:49 2026
+    Info: Elapsed time: 00:01:56
+    Info: Total CPU time (on all processors): 00:02:55
+Info (292036): Thank you for using the Quartus Prime software 30-day evaluation. You have 7 days remaining (until Sep 30, 2026) to use the Quartus Prime software with compilation and simulation support.
+Info: *******************************************************************
+Info: Running Quartus Prime Fitter
+    Info: Version 23.1std.1 Build 993 05/14/2024 SC Standard Edition
+    Info: Processing started: Wed Sep 23 04:15:50 2026
+Info: Command: quartus_fit --read_settings_files=off --write_settings_files=off de10_standard_hw -c de10_standard_hw
+Info: qfit2_default_script.tcl version: #1
+Info: Project  = de10_standard_hw
+Info: Revision = de10_standard_hw
+Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
+Info (20030): Parallel compilation is enabled and will use 8 of the 8 processors detected
+Info (119006): Selected device 5CSXFC6D6F31C6 for design "de10_standard_hw"
+Info (21076): High junction temperature operating condition is not set. Assuming a default value of '85'.
+Info (21076): Low junction temperature operating condition is not set. Assuming a default value of '0'.
+Info (171003): Fitter is performing an Auto Fit compilation, which may decrease Fitter effort to reduce compilation time
+Warning (15714): Some pins have incomplete I/O assignments. Refer to the I/O Assignment Warnings report for details
+Info (184020): Starting Fitter periphery placement operations
+Info (11191): Automatically promoted 2 clocks (2 global)
+    Info (11162): CLOCK_50~inputCLKENA0 with 30613 fanout uses global clock CLKCTRL_G5
+    Info (11162): KEY[0]~inputCLKENA0 with 917 fanout uses global clock CLKCTRL_G4
+        Info (12525): This signal is driven by core routing -- it may be moved during placement to reduce routing delays
+Warning (16406): 1 global input pin(s) will use non-dedicated clock routing
+    Warning (16407): Source REFCLK I/O is not placed onto a dedicated REFCLK input pin for global clock driver KEY[0]~inputCLKENA0, placed at CLKCTRL_G4
+        Info (179012): Refclk input I/O pad KEY[0] is placed onto PIN_AJ4
+Info (184021): Fitter periphery placement operations ending: elapsed time is 00:00:01
+Info (176233): Starting register packing
+Info (332104): Reading SDC File: 'de10_standard_hw.sdc'
+Info (332143): No user constrained clock uncertainty found in the design. Calling "derive_clock_uncertainty"
+Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
+Info (332129): Detected timing requirements -- optimizing circuit to achieve only the specified requirements
+Info (332111): Found 1 clocks
+    Info (332111):   Period   Clock Name
+    Info (332111): ======== ============
+    Info (332111):   20.000     CLOCK_50
+Info (176235): Finished register packing
+    Extra Info (176218): Packed 256 registers into blocks of type DSP block
+    Extra Info (176220): Created 192 register duplicates
+Info (11798): Fitter preparation operations ending: elapsed time is 00:00:28
+Info (170189): Fitter placement preparation operations beginning
+Info (14951): The Fitter is using Advanced Physical Optimization.
+Info (170190): Fitter placement preparation operations ending: elapsed time is 00:03:22
+Info (170191): Fitter placement operations beginning
+Info (170137): Fitter placement was successful
+Info (170192): Fitter placement operations ending: elapsed time is 00:01:49
+Info (170193): Fitter routing operations beginning
+Info (170195): Router estimated average interconnect usage is 43% of the available device resources
+    Info (170196): Router estimated peak interconnect usage is 74% of the available device resources in the region that extends from location X22_Y35 to location X32_Y45
+Warning (16684): The router is trying to resolve an exceedingly large amount of congestion. At the moment, it predicts long routing run time and/or significant setup or hold timing failures. Congestion details can be found in the Chip Planner.
+Warning (16618): Fitter routing phase terminated due to routing congestion. Congestion details can be found in Chip Planner.
+Critical Warning (188026): The Fitter failed to successfully route the design.  You may be able get this design to route by making design modifications, changing the fitter seed or by enabling the Fitter Aggressive Routability Optimizations logic option.
+    Info (188027): The highest placement effort tried by the fitter during this compile was:  1
+Error (170143): Final fitting attempt was unsuccessful
+Info (170202): The Fitter performed an Auto Fit compilation.  No optimizations were skipped because the design's timing and routability requirements required full optimization.
+Info (170194): Fitter routing operations ending: elapsed time is 00:01:43
+Info (11888): Total time spent on timing analysis during the Fitter is 90.84 seconds.
+Warning (169069): Following 2 pins have nothing, GND, or VCC driving datain port -- changes to this connectivity may change fitting results
+    Info (169070): Pin LEDR[5] has GND driving its datain port File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw_top.sv Line: 8
+    Info (169070): Pin LEDR[9] has GND driving its datain port File: /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw_top.sv Line: 8
+Error (11802): Can't fit design in device. Modify your design to reduce resources, or choose a larger device. The Intel FPGA Knowledge Database contains many articles with specific details on how to resolve this error. Visit the Knowledge Database at https://www.altera.com/support/support-resources/knowledge-base/search.html and search for this specific error message number.
+Info (144001): Generated suppressed messages file /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/output_files/de10_standard_hw.fit.smsg
+Error: Quartus Prime Fitter was unsuccessful. 2 errors, 8 warnings
+    Error: Peak virtual memory: 3390 megabytes
+    Error: Processing ended: Wed Sep 23 04:24:48 2026
+    Error: Elapsed time: 00:08:58
+    Error: Total CPU time (on all processors): 00:29:58
+Error (293001): Quartus Prime Full Compilation was unsuccessful. 4 errors, 28 warnings
+Error: Flow compile (for project /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw) was not successful
+Error: ERROR: Error(s) found while running an executable. See report file(s) for error message(s). Message log indicates which executable was run last.
+
+Error (23031): Evaluation of Tcl script /home/raone/intelFPGA/23.1std/quartus/common/tcl/internal/qsh_flow.tcl unsuccessful
+Error: Quartus Prime Shell was unsuccessful. 11 errors, 28 warnings
+    Error: Peak virtual memory: 516 megabytes
+    Error: Processing ended: Wed Sep 23 04:24:48 2026
+    Error: Elapsed time: 00:10:56
+    Error: Total CPU time (on all processors): 00:32:55

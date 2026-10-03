@@ -1,0 +1,41 @@
++ set -euo pipefail
++++ dirname ./run_quartus.sh
+++ cd .
+++ pwd
++ project_dir=/home/raone/fpga-ai-accelerator/quartus/de10_standard_hw
++ quartus_sh_bin=/home/raone/intelFPGA/23.1std/quartus/bin/quartus_sh
++ cd /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw
++ /home/raone/intelFPGA/23.1std/quartus/bin/quartus_sh --flow compile de10_standard_hw
+Info: *******************************************************************
+Info: Running Quartus Prime Shell
+    Info: Version 23.1std.1 Build 993 05/14/2024 SC Standard Edition
+    Info: Copyright (C) 2024  Intel Corporation. All rights reserved.
+    Info: Your use of Intel Corporation's design tools, logic functions 
+    Info: and other software and tools, and any partner logic 
+    Info: functions, and any output files from any of the foregoing 
+    Info: (including device programming or simulation files), and any 
+    Info: associated documentation or information are expressly subject 
+    Info: to the terms and conditions of the Intel Program License 
+    Info: Subscription Agreement, the Intel Quartus Prime License Agreement,
+    Info: the Intel FPGA IP License Agreement, or other applicable license
+    Info: agreement, including, without limitation, that your use is for
+    Info: the sole purpose of programming logic devices manufactured by
+    Info: Intel and sold by Intel or its authorized distributors.  Please
+    Info: refer to the applicable agreement for further details, at
+    Info: https://fpgasoftware.intel.com/eula.
+    Info: Processing started: Sat Oct  3 14:18:46 2026
+Info: Command: quartus_sh --flow compile de10_standard_hw
+Info: Quartus(args): compile de10_standard_hw
+Info: Project Name = /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw
+Info: Revision Name = de10_standard_hw
+Error (292037): Thank you for using the Quartus Prime software. Your 30-day evaluation period has expired.
+Error (293001): Quartus Prime Full Compilation was unsuccessful. 1 error, 0 warnings
+Error: Flow compile (for project /home/raone/fpga-ai-accelerator/quartus/de10_standard_hw/de10_standard_hw) was not successful
+Error: ERROR: Error(s) found while running an executable. See report file(s) for error message(s). Message log indicates which executable was run last.
+
+Error (23031): Evaluation of Tcl script /home/raone/intelFPGA/23.1std/quartus/common/tcl/internal/qsh_flow.tcl unsuccessful
+Error: Quartus Prime Shell was unsuccessful. 5 errors, 0 warnings
+    Error: Peak virtual memory: 465 megabytes
+    Error: Processing ended: Sat Oct  3 14:18:48 2026
+    Error: Elapsed time: 00:00:02
+    Error: Total CPU time (on all processors): 00:00:01

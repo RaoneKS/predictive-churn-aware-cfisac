@@ -1,0 +1,62 @@
+# Intel DE10-Standard / Cyclone V SoC target
+# Board device: 5CSXFC6D6F31C6
+
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSXFC6D6F31C6
+set_global_assignment -name TOP_LEVEL_ENTITY inference_accelerator_top
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+
+# Keep source order explicit: the package must be parsed before its consumers.
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/pkg_accelerator.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mac_unit.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/systolic_array.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/sram_controller.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/axi_stream_input.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/axi_stream_output.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/quantize_unit.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/layer_ctrl_fsm.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/inference_accelerator_top.sv
+
+# This phase targets the accelerator RTL directly, without a board I/O wrapper.
+# Mark its transaction-level ports virtual so they do not consume physical I/O
+# sites. A future board wrapper supplies actual DE10-Standard pin assignments.
+set_instance_assignment -name VIRTUAL_PIN ON -to clk
+set_instance_assignment -name VIRTUAL_PIN ON -to rst_n
+set_instance_assignment -name VIRTUAL_PIN ON -to start
+set_instance_assignment -name VIRTUAL_PIN ON -to abort_req
+set_instance_assignment -name VIRTUAL_PIN ON -to busy
+set_instance_assignment -name VIRTUAL_PIN ON -to done
+set_instance_assignment -name VIRTUAL_PIN ON -to layer_desc_in
+set_instance_assignment -name VIRTUAL_PIN ON -to layer_desc_valid
+set_instance_assignment -name VIRTUAL_PIN ON -to layer_desc_ready
+set_instance_assignment -name VIRTUAL_PIN ON -to s_axis_tdata
+set_instance_assignment -name VIRTUAL_PIN ON -to s_axis_tkeep
+set_instance_assignment -name VIRTUAL_PIN ON -to s_axis_tvalid
+set_instance_assignment -name VIRTUAL_PIN ON -to s_axis_tready
+set_instance_assignment -name VIRTUAL_PIN ON -to s_axis_tlast
+set_instance_assignment -name VIRTUAL_PIN ON -to m_axis_tdata
+set_instance_assignment -name VIRTUAL_PIN ON -to m_axis_tkeep
+set_instance_assignment -name VIRTUAL_PIN ON -to m_axis_tvalid
+set_instance_assignment -name VIRTUAL_PIN ON -to m_axis_tready
+set_instance_assignment -name VIRTUAL_PIN ON -to m_axis_tlast
+set_instance_assignment -name VIRTUAL_PIN ON -to wgt_wr_en
+set_instance_assignment -name VIRTUAL_PIN ON -to wgt_wr_addr
+set_instance_assignment -name VIRTUAL_PIN ON -to wgt_wr_data
+set_instance_assignment -name VIRTUAL_PIN ON -to wgt_load_done
+set_instance_assignment -name VIRTUAL_PIN ON -to current_state
+set_instance_assignment -name VIRTUAL_PIN ON -to error_flag
+set_instance_assignment -name VIRTUAL_PIN ON -to error_code
+set_instance_assignment -name VIRTUAL_PIN ON -to any_overflow
+set_instance_assignment -name VIRTUAL_PIN ON -to perf_counters
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_sram_active_bank
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_sram_bank_conflict
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_sram_rd_valid
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_act_valid
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_act_frame_last
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_quant_valid
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_quant_saturated
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_out_backpressure
+set_instance_assignment -name VIRTUAL_PIN ON -to dbg_wgt_load_start
+
+set_global_assignment -name LAST_QUARTUS_VERSION "23.1std.1 Standard Edition"
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
