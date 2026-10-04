@@ -23,11 +23,11 @@ echo "=== 2. Generic accelerator regression ==="
 
 echo
 echo "=== 3. CNN end-to-end RTL regression ==="
-./verification/scripts/run_cnn_e2e.sh
+bash verification/scripts/run_cnn_e2e.sh
 
 echo
 echo "=== 4. DE10 Quartus implementation ==="
-./quartus/de10_standard_hw/run_quartus.sh
+bash quartus/de10_standard_hw/run_quartus.sh
 
 echo
 echo "=== VALIDATION FLOW COMPLETED ==="
