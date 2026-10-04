@@ -27,20 +27,7 @@ module tb_cnn_inference_top;
     .logits0(logits0),.logits1(logits1),.logits2(logits2),.logits3(logits3),
     .logits_valid(logits_valid),.cycle_count(cycle_count));
 
-  initial begin clk=0;forever #5 clk=~clk;end
-
-  initial begin
-    $readmemh("sim/cnn_vectors/input.hex",in_mem);
-    $readmemh("sim/cnn_vectors/reference_logits.hex",ref_mem);
-    $readmemh("sim/cnn_vectors/reference_predictions.hex",pred_mem);
-    $readmemh("sim/cnn_vectors/reference_labels.hex",label_mem);
-    $readmemh("sim/cnn_vectors/conv1_weights.hex",c1w_mem);
-    $readmemh("sim/cnn_vectors/conv1_bias.hex",c1b_mem);
-    $readmemh("sim/cnn_vectors/conv2_weights.hex",c2w_mem);
-    $readmemh("sim/cnn_vectors/conv2_bias.hex",c2b_mem);
-    $readmemh("sim/cnn_vectors/classifier_weights.hex",clfw_mem);
-    $readmemh("sim/cnn_vectors/classifier_bias.hex",clfb_mem);
-
+  
     genvar g;
     generate
       for(g=0;g<8;g=g+1) begin : GEN_C1B
@@ -51,7 +38,7 @@ module tb_cnn_inference_top;
         assign clfb_flat[g*32 +: 32] = clfb_mem[g];
       end
     endgenerate
-
+  
     genvar wk, wc, ck, cc, cj;
     generate
       for(wk=0;wk<5;wk=wk+1) begin : GEN_C1W_K
@@ -72,6 +59,21 @@ module tb_cnn_inference_top;
         end
       end
     endgenerate
+  
+  initial begin clk=0;forever #5 clk=~clk;end
+
+  initial begin
+    $readmemh("sim/cnn_vectors/input.hex",in_mem);
+    $readmemh("sim/cnn_vectors/reference_logits.hex",ref_mem);
+    $readmemh("sim/cnn_vectors/reference_predictions.hex",pred_mem);
+    $readmemh("sim/cnn_vectors/reference_labels.hex",label_mem);
+    $readmemh("sim/cnn_vectors/conv1_weights.hex",c1w_mem);
+    $readmemh("sim/cnn_vectors/conv1_bias.hex",c1b_mem);
+    $readmemh("sim/cnn_vectors/conv2_weights.hex",c2w_mem);
+    $readmemh("sim/cnn_vectors/conv2_bias.hex",c2b_mem);
+    $readmemh("sim/cnn_vectors/classifier_weights.hex",clfw_mem);
+    $readmemh("sim/cnn_vectors/classifier_bias.hex",clfb_mem);
+
 
     class_total0=0;class_total1=0;class_total2=0;class_total3=0;
     class_correct0=0;class_correct1=0;class_correct2=0;class_correct3=0;
