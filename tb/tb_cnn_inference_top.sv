@@ -16,6 +16,7 @@ module tb_cnn_inference_top;
   integer i,j,k,w,s,c,matches,pred_matches,err_count,got_pred,best,got,refv,ref_pred,ref_label;
   integer class_total0,class_total1,class_total2,class_total3;
   integer class_correct0,class_correct1,class_correct2,class_correct3;
+  integer repeat0,repeat1,repeat2,repeat3;
 
   cnn_inference_top dut(
     .clk(clk),.rst_n(rst_n),.start(start),.done(done),
@@ -80,6 +81,51 @@ module tb_cnn_inference_top;
       if((w%64)==63) $display("Progress: %0d/%0d windows",w+1,N);
       @(posedge clk);
     end
+
+    // Explicit back-to-back normal -> outer without reset.
+    @(posedge clk);start=1;@(posedge clk);start=0;
+    for(s=0;s<W;s=s+1) begin
+      while(!window_ready) @(posedge clk);
+      window_sample=in_mem[s];window_valid=1;@(posedge clk);window_valid=0;
+    end
+    wait(done);#1;
+    if(logits0!==ref_mem[0]) begin $display("ERROR: back-to-back normal mismatch c0");$finish(1);end
+    if(logits1!==ref_mem[1]) begin $display("ERROR: back-to-back normal mismatch c1");$finish(1);end
+    if(logits2!==ref_mem[2]) begin $display("ERROR: back-to-back normal mismatch c2");$finish(1);end
+    if(logits3!==ref_mem[3]) begin $display("ERROR: back-to-back normal mismatch c3");$finish(1);end
+
+    @(posedge clk);start=1;@(posedge clk);start=0;
+    for(s=0;s<W;s=s+1) begin
+      while(!window_ready) @(posedge clk);
+      window_sample=in_mem[384*W+s];window_valid=1;@(posedge clk);window_valid=0;
+    end
+    wait(done);#1;
+    if(logits0!==ref_mem[384*4+0]) begin $display("ERROR: back-to-back outer mismatch c0");$finish(1);end
+    if(logits1!==ref_mem[384*4+1]) begin $display("ERROR: back-to-back outer mismatch c1");$finish(1);end
+    if(logits2!==ref_mem[384*4+2]) begin $display("ERROR: back-to-back outer mismatch c2");$finish(1);end
+    if(logits3!==ref_mem[384*4+3]) begin $display("ERROR: back-to-back outer mismatch c3");$finish(1);end
+
+    // Explicit same-window repeat without reset.
+    @(posedge clk);start=1;@(posedge clk);start=0;
+    for(s=0;s<W;s=s+1) begin
+      while(!window_ready) @(posedge clk);
+      window_sample=in_mem[s];window_valid=1;@(posedge clk);window_valid=0;
+    end
+    wait(done);#1;
+    repeat0=logits0;repeat1=logits1;repeat2=logits2;repeat3=logits3;
+
+    @(posedge clk);start=1;@(posedge clk);start=0;
+    for(s=0;s<W;s=s+1) begin
+      while(!window_ready) @(posedge clk);
+      window_sample=in_mem[s];window_valid=1;@(posedge clk);window_valid=0;
+    end
+    wait(done);#1;
+    if(logits0!==repeat0 || logits1!==repeat1 || logits2!==repeat2 || logits3!==repeat3) begin
+      $display("ERROR: same-window repeat mismatch");
+      $finish(1);
+    end
+    $display("BACK_TO_BACK_TEST_PASSED");
+    $display("SAME_WINDOW_REPEAT_PASSED");
 
     $display("");$display("=== CNN E2E RESULT ===");$display("Windows: %0d",N);
     $display("Exact logits: %0d/%0d",matches,N*4);
