@@ -71,7 +71,9 @@ module tb_cnn_inference_top;
       end
       for(ck=0;ck<192;ck=ck+1) begin : GEN_C2W_FLAT
         assign c2w_flat[ck*8 +: 8] =
-          c2w_mem[(ck%8)*24 + ((ck/8)/3)*3 + ((ck/8)%3)];
+          // c2w_mem is [out_channel][in_channel][kernel], flattened as oc*24 + ch*3 + k.
+          // RTL expects [in_channel][kernel][out_channel].
+          c2w_mem[(ck%8)*24 + (ck/8)];
       end
       for(cj=0;cj<8;cj=cj+1) begin : GEN_CLF_J
         for(cc=0;cc<4;cc=cc+1) begin : GEN_CLF_C
