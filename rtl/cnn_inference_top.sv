@@ -78,7 +78,9 @@ module cnn_inference_top (
         CONV2: begin
           for(oc=0;oc<8;oc=oc+1) begin
             acc_tmp[oc]=$signed(conv2_bias_flat[oc*32 +: 32]);
-            for(k=0;k<3;k=k+1) for(ch=0;ch<8;ch=ch+1)
+            // Reference im2col order is [ch0_t-1,ch0_t,ch0_t+1,ch1_t-1,...].
+            // Iterate channel first, then kernel position to match [K, output_channel] weights.
+            for(ch=0;ch<8;ch=ch+1) for(k=0;k<3;k=k+1)
               if((idx+k-1)>=0&&(idx+k-1)<P)
                 acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights_flat[(ch*3+k)*8 + oc*8 +: 8]);
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
