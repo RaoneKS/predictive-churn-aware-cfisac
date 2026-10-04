@@ -1,0 +1,45 @@
+name: FPGA CNN CI
+
+on:
+  push:
+    branches: [fpga-cnn-integration]
+  pull_request:
+    branches: [fpga-cnn-integration]
+
+jobs:
+  cnn-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy scipy
+
+      - name: Build authoritative CNN vectors
+        run: python3 verification/scripts/build_authoritative_cnn_vectors.py
+
+      - name: Check authoritative reference
+        run: python3 verification/scripts/check_cnn_reference.py
+
+      - name: Generic accelerator regression
+        run: ./verification/scripts/run_icarus_regression.sh
+
+      - name: CNN end-to-end RTL regression
+        run: bash verification/scripts/run_cnn_e2e.sh
+
+      - name: Upload CNN logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpga-cnn-ci-logs
+          path: |
+            sim/compile.log
+            sim/cnn_e2e.log
+            sim/cnn_vectors/
+          if-no-files-found: ignore
