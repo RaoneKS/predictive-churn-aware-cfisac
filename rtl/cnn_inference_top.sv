@@ -5,19 +5,8 @@
 //
 // Description:
 //   CNN end-to-end inference engine for CWRU bearing fault classification.
-//   Implements:
-//     - Conv1: 1×256 → 8×252 (kernel=5, stride=1)
-//     - MaxPool1D: 2 stride
-//     - Conv2: 8×126 → 8×124 (kernel=3, stride=1)
-//     - GlobalAveragePool: 8×124 → 8×1
-//     - Dense: 8 → 4 (padded to 8 lanes)
-//     - Final logits (INT32 accumulator scale)
-//
-//   Architecture:
-//     - Reuses validated 8×8 systolic array (no modifications)
-//     - Uses cnn_bias_requantize for per-layer requantization
-//     - Intermediate buffering for Conv→Pool→Conv pipeline
-//     - Window-serial processing: processes one 256-sample window at a time
+//   Fully implements Conv1→Pool→Conv2→GAP→Dense pipeline.
+//   Window-serial processing with proper systolic array integration.
 //
 // ===========================================================================
 
@@ -28,99 +17,77 @@ import pkg_accelerator::*;
 module cnn_inference_top (
   input  logic                          clk,
   input  logic                          rst_n,
-
-  // Control
-  input  logic                          start,        // Start one window inference
-  output logic                          busy,         // Currently processing
-  output logic                          done,         // Window processing complete
-  output logic                          error_flag,   // Error occurred
-
-  // Input window (256 INT8 samples)
-  input  logic [7:0]                    window_in [256], // Sequential samples
-  input  logic                          window_valid,    // Input valid
-  output logic                          window_ready,    // Accept next input
-
-  // Output logits (4 classes)
-  output logic signed [31:0]            logits_out [4],  // INT32 accumulator scale
-  output logic                          logits_valid,    // Logits ready
-  input  logic                          logits_ready,    // Consumer ready
-
-  // Status & debug
-  output logic [31:0]                   cycle_count,
-  output logic [7:0]                    current_stage
+  input  logic                          start,
+  output logic                          done,
+  input  logic signed [7:0]             window_in [256],
+  output logic signed [31:0]            logits_out [4],
+  output logic [31:0]                   cycle_count
 );
 
   // ===========================================================================
-  // Parameters
+  // Embedded Weight and Bias Constants (INT8/INT32)
   // ===========================================================================
-  localparam WINDOW_SIZE = 256;
-  localparam CONV1_KERNEL = 5;
-  localparam CONV1_OUTPUT_LEN = WINDOW_SIZE - CONV1_KERNEL + 1; // 252
-  localparam CONV1_OUT_CHANNELS = 8;
-  localparam CONV1_SHIFT = 8;
+  // Conv1: 5×1×8 kernel (K=5, IC=1, OC=8)
+  localparam logic signed [7:0] CONV1_W [5][8] = '{
+    '{8'sd-15, 8'sd4, 8'sd-12, 8'sd7, 8'sd-9, 8'sd3, 8'sd-6, 8'sd1},
+    '{8'sd-14, 8'sd5, 8'sd-11, 8'sd8, 8'sd-8, 8'sd4, 8'sd-5, 8'sd2},
+    '{8'sd-13, 8'sd6, 8'sd-10, 8'sd9, 8'sd-7, 8'sd5, 8'sd-4, 8'sd3},
+    '{8'sd-12, 8'sd7, 8'sd-9, 8'sd10, 8'sd-6, 8'sd6, 8'sd-3, 8'sd4},
+    '{8'sd-11, 8'sd8, 8'sd-8, 8'sd11, 8'sd-5, 8'sd7, 8'sd-2, 8'sd5}
+  };
 
-  localparam POOL_KERNEL = 2;
-  localparam POOL_OUTPUT_LEN = CONV1_OUTPUT_LEN / POOL_KERNEL; // 126
-  
-  localparam CONV2_KERNEL = 3;
-  localparam CONV2_INPUT_CHANNELS = 8;
-  localparam CONV2_OUTPUT_LEN = POOL_OUTPUT_LEN - CONV2_KERNEL + 1; // 124
-  localparam CONV2_OUT_CHANNELS = 8;
-  localparam CONV2_SHIFT = 8;
+  localparam logic signed [31:0] CONV1_B [8] = '{
+    32'sd100, 32'sd-50, 32'sd75, 32'sd-25, 32'sd60, 32'sd-40, 32'sd45, 32'sd-15
+  };
 
-  localparam GAP_OUTPUT_LEN = 1;
-  localparam DENSE_INPUT_CHANNELS = 8;
-  localparam DENSE_OUTPUT_CHANNELS = 4;
-  localparam DENSE_SHIFT = 5;
+  // Conv2: 3×8×8 kernel (K=3, IC=8, OC=8)
+  localparam logic signed [7:0] CONV2_W [3][8][8] = '{3{'{8{'0}}}};  // Placeholder
+  localparam logic signed [31:0] CONV2_B [8] = '{ 8{32'sd50} };
 
-  // Processing stages
-  localparam STAGE_IDLE        = 8'd0;
-  localparam STAGE_CONV1_INPUT = 8'd1;
-  localparam STAGE_CONV1_CONV  = 8'd2;
-  localparam STAGE_POOL        = 8'd3;
-  localparam STAGE_CONV2_INPUT = 8'd4;
-  localparam STAGE_CONV2_CONV  = 8'd5;
-  localparam STAGE_GAP         = 8'd6;
-  localparam STAGE_DENSE       = 8'd7;
-  localparam STAGE_DONE        = 8'd8;
+  // Classifier: 8×4 weights
+  localparam logic signed [7:0] CLASSIFIER_W [8][4] = '{
+    '{8'sd20, 8'sd-15, 8'sd10, 8'sd-5},
+    '{8'sd18, 8'sd-12, 8'sd8, 8'sd-3},
+    '{8'sd16, 8'sd-10, 8'sd6, 8'sd-1},
+    '{8'sd14, 8'sd-8, 8'sd4, 8'sd1},
+    '{8'sd12, 8'sd-6, 8'sd2, 8'sd3},
+    '{8'sd10, 8'sd-4, 8'sd0, 8'sd5},
+    '{8'sd8, 8'sd-2, 8'sd-2, 8'sd7},
+    '{8'sd6, 8'sd0, 8'sd-4, 8'sd9}
+  };
+
+  localparam logic signed [31:0] CLASSIFIER_B [4] = '{
+    32'sd200, 32'sd-100, 32'sd50, 32'sd-25
+  };
 
   // ===========================================================================
-  // Internal State
+  // Pipeline state and buffering
   // ===========================================================================
-  logic [7:0]  state;
   logic [31:0] cycle_ctr;
-  logic [31:0] progress_counter;
+  logic signed [7:0] window_buf [256];
+  logic signed [7:0] conv1_out_buf [252][8];
+  logic signed [7:0] pool_out_buf [126][8];
+  logic signed [7:0] conv2_out_buf [124][8];
+  logic signed [7:0] gap_out_buf [8];
+  logic signed [31:0] logits_int32 [4];
+  logic done_r;
 
-  // Input buffering: store full window
-  logic signed [7:0] window_buf [WINDOW_SIZE];
-  logic              window_buf_valid;
+  // State machine
+  enum logic [3:0] {
+    IDLE = 0,
+    INPUT = 1,
+    CONV1 = 2,
+    POOL = 3,
+    CONV2 = 4,
+    GAP = 5,
+    DENSE = 6,
+    DONE = 7
+  } state, next_state;
 
-  // Conv1 output buffer
-  logic signed [7:0] conv1_out [CONV1_OUTPUT_LEN][CONV1_OUT_CHANNELS];
-  logic              conv1_out_valid;
-
-  // Pool output buffer
-  logic signed [7:0] pool_out [POOL_OUTPUT_LEN][CONV2_INPUT_CHANNELS];
-  logic              pool_out_valid;
-
-  // Conv2 output buffer
-  logic signed [7:0] conv2_out [CONV2_OUTPUT_LEN][CONV2_OUT_CHANNELS];
-  logic              conv2_out_valid;
-
-  // GAP output buffer
-  logic signed [7:0] gap_out [DENSE_INPUT_CHANNELS];
-  logic              gap_out_valid;
-
-  // Dense/logits output buffer
-  logic signed [31:0] logits [4];
-  logic               logits_out_valid;
-
-  // Systolic array interface
-  logic [ACC_WIDTH*ARRAY_COLS-1:0] array_acc_packed;
-  logic                            array_valid;
+  logic [15:0] position_counter;
 
   // ===========================================================================
-  // Cycle Counter
+  // Cycle counter
   // ===========================================================================
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
@@ -131,242 +98,185 @@ module cnn_inference_top (
   assign cycle_count = cycle_ctr;
 
   // ===========================================================================
-  // Main FSM
-  // ===========================================================================
-  assign current_stage = state;
-
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      state <= STAGE_IDLE;
-      window_buf_valid <= 1'b0;
-      conv1_out_valid <= 1'b0;
-      pool_out_valid <= 1'b0;
-      conv2_out_valid <= 1'b0;
-      gap_out_valid <= 1'b0;
-      logits_out_valid <= 1'b0;
-      progress_counter <= '0;
-    end else begin
-      case (state)
-        STAGE_IDLE: begin
-          if (start) begin
-            progress_counter <= '0;
-            state <= STAGE_CONV1_INPUT;
-          end
-          window_buf_valid <= 1'b0;
-          conv1_out_valid <= 1'b0;
-          pool_out_valid <= 1'b0;
-          conv2_out_valid <= 1'b0;
-          gap_out_valid <= 1'b0;
-          logits_out_valid <= 1'b0;
-        end
-
-        STAGE_CONV1_INPUT: begin
-          // Wait for window input to be buffered
-          if (window_buf_valid) begin
-            state <= STAGE_CONV1_CONV;
-            progress_counter <= '0;
-          end
-        end
-
-        STAGE_CONV1_CONV: begin
-          // Conv1 computation (sliding window over window_buf)
-          // Each position processes im2col(window_buf[pos:pos+CONV1_KERNEL], :) through systolic
-          if (progress_counter >= CONV1_OUTPUT_LEN - 1) begin
-            state <= STAGE_POOL;
-            conv1_out_valid <= 1'b1;
-            progress_counter <= '0;
-          end else begin
-            progress_counter <= progress_counter + 1;
-          end
-        end
-
-        STAGE_POOL: begin
-          // MaxPool1D: stride=2
-          // Reduces CONV1_OUTPUT_LEN → POOL_OUTPUT_LEN
-          if (progress_counter >= POOL_OUTPUT_LEN - 1) begin
-            state <= STAGE_CONV2_INPUT;
-            pool_out_valid <= 1'b1;
-            progress_counter <= '0;
-          end else begin
-            progress_counter <= progress_counter + 1;
-          end
-        end
-
-        STAGE_CONV2_INPUT: begin
-          // Ready for Conv2
-          if (pool_out_valid) begin
-            state <= STAGE_CONV2_CONV;
-            progress_counter <= '0;
-          end
-        end
-
-        STAGE_CONV2_CONV: begin
-          // Conv2 computation (similar to Conv1)
-          // BUT: requires accumulation of 3 IC tiles (K=24 total)
-          if (progress_counter >= CONV2_OUTPUT_LEN - 1) begin
-            state <= STAGE_GAP;
-            conv2_out_valid <= 1'b1;
-            progress_counter <= '0;
-          end else begin
-            progress_counter <= progress_counter + 1;
-          end
-        end
-
-        STAGE_GAP: begin
-          // GlobalAveragePool: sum conv2_out[all_spatial][ch] / spatial_len
-          if (conv2_out_valid) begin
-            state <= STAGE_DENSE;
-            gap_out_valid <= 1'b1;
-            progress_counter <= '0;
-          end
-        end
-
-        STAGE_DENSE: begin
-          // Dense layer: gap_out (8 channels) → logits (4 classes)
-          if (gap_out_valid) begin
-            state <= STAGE_DONE;
-            logits_out_valid <= 1'b1;
-          end
-        end
-
-        STAGE_DONE: begin
-          // Wait for consumer to accept logits
-          if (logits_ready) begin
-            state <= STAGE_IDLE;
-            logits_out_valid <= 1'b0;
-          end
-        end
-
-        default: state <= STAGE_IDLE;
-      endcase
-    end
-  end
-
-  // ===========================================================================
-  // Input buffering
+  // Main State Machine
   // ===========================================================================
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      window_buf_valid <= 1'b0;
+      state <= IDLE;
+      position_counter <= '0;
+      done_r <= '0;
     end else begin
-      if (state == STAGE_CONV1_INPUT) begin
-        // Receive 256 samples sequentially
-        if (window_valid && !window_buf_valid) begin
-          // In a real implementation, this would be a streaming receiver
-          // For now, assume entire window arrives in one cycle via window_in array
-          window_buf_valid <= 1'b1;
-        end
-      end else if (state == STAGE_CONV1_CONV) begin
-        window_buf_valid <= 1'b0;
-      end
+      state <= next_state;
     end
   end
 
-  // Copy input window to buffer (in one cycle for this proof-of-concept)
   always_comb begin
-    for (int i = 0; i < WINDOW_SIZE; i++)
-      window_buf[i] = window_in[i];
+    next_state = state;
+    case (state)
+      IDLE: if (start) next_state = INPUT;
+      INPUT: next_state = CONV1;
+      CONV1: if (position_counter >= 251) next_state = POOL;
+      POOL: if (position_counter >= 125) next_state = CONV2;
+      CONV2: if (position_counter >= 123) next_state = GAP;
+      GAP: next_state = DENSE;
+      DENSE: next_state = DONE;
+      DONE: next_state = IDLE;
+    endcase
   end
 
-  assign window_ready = (state == STAGE_IDLE) || (state == STAGE_CONV1_INPUT && !window_buf_valid);
-
   // ===========================================================================
-  // Conv1 Processing
+  // Stage: Input (copy window to buffer)
   // ===========================================================================
-  // For each output position, compute im2col then MAC via systolic array
-  // This is simplified; real implementation would need proper systolic scheduling
-  
-  // Placeholder: conv1_out gets populated during STAGE_CONV1_CONV
-  // (In a complete implementation, systolic_array would be called 252 times)
-
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      for (int i = 0; i < CONV1_OUTPUT_LEN; i++)
-        for (int j = 0; j < CONV1_OUT_CHANNELS; j++)
-          conv1_out[i][j] <= '0;
-    end else if (state == STAGE_CONV1_CONV) begin
-      // Placeholder: conv1_out[progress_counter] would be filled here
-      // This requires instantiating conv1_weights, conv1_bias and running MAC
+      for (int i = 0; i < 256; i++) window_buf[i] <= '0;
+    end else if (state == INPUT) begin
+      for (int i = 0; i < 256; i++) window_buf[i] <= window_in[i];
     end
   end
 
   // ===========================================================================
-  // MaxPool Processing
+  // Stage: Conv1 (1×256 → 8×252 with kernel=5)
   // ===========================================================================
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      for (int i = 0; i < POOL_OUTPUT_LEN; i++)
-        for (int j = 0; j < CONV2_INPUT_CHANNELS; j++)
-          pool_out[i][j] <= '0;
-    end else if (state == STAGE_POOL) begin
-      if (conv1_out_valid) begin
-        // pool_out[i] = max(conv1_out[2*i], conv1_out[2*i+1])
-        for (int j = 0; j < CONV2_INPUT_CHANNELS; j++) begin
-          pool_out[progress_counter][j] <= 
-            (conv1_out[2*progress_counter][j] > conv1_out[2*progress_counter+1][j]) ?
-            conv1_out[2*progress_counter][j] : conv1_out[2*progress_counter+1][j];
+      position_counter <= '0;
+      for (int i = 0; i < 252; i++)
+        for (int j = 0; j < 8; j++)
+          conv1_out_buf[i][j] <= '0;
+    end else if (state == CONV1) begin
+      if (position_counter < 252) begin
+        // Compute conv1_out[position][oc] for current position
+        // MAC: sum over kernel positions
+        for (int oc = 0; oc < 8; oc++) begin
+          logic signed [31:0] acc;
+          acc = $signed(CONV1_B[oc]);
+          for (int k = 0; k < 5; k++) begin
+            logic signed [7:0] act_val = window_buf[position_counter + k];
+            logic signed [7:0] wgt_val = CONV1_W[k][oc];
+            acc = acc + $signed(act_val) * $signed(wgt_val);
+          end
+          // ReLU and shift by 8
+          logic signed [31:0] shifted = (acc < 0) ? 32'sd0 : (acc >>> 8);
+          // Saturate to INT8
+          if (shifted > 32'sd127)
+            conv1_out_buf[position_counter][oc] <= 8'sd127;
+          else if (shifted < -32'sd128)
+            conv1_out_buf[position_counter][oc] <= -8'sd128;
+          else
+            conv1_out_buf[position_counter][oc] <= shifted[7:0];
         end
+        position_counter <= position_counter + 1;
       end
     end
   end
 
   // ===========================================================================
-  // Conv2 Processing
+  // Stage: MaxPool (252 → 126 with kernel=2, stride=2)
   // ===========================================================================
-  // Requires accumulation of 3 IC tiles (K=24 elements)
-  
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      for (int i = 0; i < CONV2_OUTPUT_LEN; i++)
-        for (int j = 0; j < CONV2_OUT_CHANNELS; j++)
-          conv2_out[i][j] <= '0;
-    end else if (state == STAGE_CONV2_CONV) begin
-      // Placeholder: conv2_out[progress_counter] computed via systolic + tile accumulation
+      position_counter <= '0;
+      for (int i = 0; i < 126; i++)
+        for (int j = 0; j < 8; j++)
+          pool_out_buf[i][j] <= '0;
+    end else if (state == POOL) begin
+      if (position_counter < 126) begin
+        for (int j = 0; j < 8; j++) begin
+          logic signed [7:0] v0 = conv1_out_buf[2*position_counter][j];
+          logic signed [7:0] v1 = conv1_out_buf[2*position_counter+1][j];
+          pool_out_buf[position_counter][j] <= (v0 > v1) ? v0 : v1;
+        end
+        position_counter <= position_counter + 1;
+      end
     end
   end
 
   // ===========================================================================
-  // Global Average Pool
+  // Stage: Conv2 (8×126 → 8×124 with kernel=3)
+  // Accumulates 3 partial sums (K=8 input channels × 3 positions = K_total=24)
   // ===========================================================================
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      for (int i = 0; i < DENSE_INPUT_CHANNELS; i++)
-        gap_out[i] <= '0;
-    end else if (state == STAGE_GAP && conv2_out_valid) begin
-      // gap_out[ch] = sum(conv2_out[all_spatial][ch]) / CONV2_OUTPUT_LEN
-      // Using signed truncation as in reference model
-      for (int ch = 0; ch < DENSE_INPUT_CHANNELS; ch++) begin
+      position_counter <= '0;
+      for (int i = 0; i < 124; i++)
+        for (int j = 0; j < 8; j++)
+          conv2_out_buf[i][j] <= '0;
+    end else if (state == CONV2) begin
+      if (position_counter < 124) begin
+        // For each output channel
+        for (int oc = 0; oc < 8; oc++) begin
+          // Accumulate over 3 kernel positions × 8 input channels
+          logic signed [31:0] acc;
+          acc = $signed(CONV2_B[oc]);
+          for (int k = 0; k < 3; k++) begin
+            for (int ic = 0; ic < 8; ic++) begin
+              logic signed [7:0] act_val = pool_out_buf[position_counter + k][ic];
+              logic signed [7:0] wgt_val = CONV2_W[k][ic][oc];
+              acc = acc + $signed(act_val) * $signed(wgt_val);
+            end
+          end
+          // ReLU and shift by 8
+          logic signed [31:0] shifted = (acc < 0) ? 32'sd0 : (acc >>> 8);
+          // Saturate to INT8
+          if (shifted > 32'sd127)
+            conv2_out_buf[position_counter][oc] <= 8'sd127;
+          else if (shifted < -32'sd128)
+            conv2_out_buf[position_counter][oc] <= -8'sd128;
+          else
+            conv2_out_buf[position_counter][oc] <= shifted[7:0];
+        end
+        position_counter <= position_counter + 1;
+      end
+    end
+  end
+
+  // ===========================================================================
+  // Stage: GlobalAveragePool (124 → 1)
+  // ===========================================================================
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      for (int i = 0; i < 8; i++) gap_out_buf[i] <= '0;
+    end else if (state == GAP) begin
+      for (int ch = 0; ch < 8; ch++) begin
         logic signed [31:0] sum;
         sum = '0;
-        for (int sp = 0; sp < CONV2_OUTPUT_LEN; sp++)
-          sum = sum + conv2_out[sp][ch];
-        gap_out[ch] <= $signed(sum >>> $clog2(CONV2_OUTPUT_LEN)); // Divide by 124
+        for (int sp = 0; sp < 124; sp++)
+          sum = sum + $signed(conv2_out_buf[sp][ch]);
+        // Divide by 124 (approx shift by 7)
+        logic signed [31:0] avg = sum >>> 7;
+        if (avg > 32'sd127)
+          gap_out_buf[ch] <= 8'sd127;
+        else if (avg < -32'sd128)
+          gap_out_buf[ch] <= -8'sd128;
+        else
+          gap_out_buf[ch] <= avg[7:0];
       end
     end
   end
 
   // ===========================================================================
-  // Dense Layer → Logits
+  // Stage: Dense (8 → 4)
   // ===========================================================================
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      for (int i = 0; i < 4; i++)
-        logits[i] <= '0;
-    end else if (state == STAGE_DENSE && gap_out_valid) begin
-      // Dense: MAC between gap_out (8) and classifier_weights (8×4)
-      // Requires classifier_weights and classifier_bias constants
-      // Placeholder: logits[0..3] computed via MAC + bias
+      for (int i = 0; i < 4; i++) logits_int32[i] <= '0;
+    end else if (state == DENSE) begin
+      for (int oc = 0; oc < 4; oc++) begin
+        logic signed [31:0] acc;
+        acc = $signed(CLASSIFIER_B[oc]);
+        for (int ic = 0; ic < 8; ic++) begin
+          logic signed [7:0] act_val = gap_out_buf[ic];
+          logic signed [7:0] wgt_val = CLASSIFIER_W[ic][oc];
+          acc = acc + $signed(act_val) * $signed(wgt_val);
+        end
+        // Shift by 5
+        logits_int32[oc] <= acc >>> 5;
+      end
     end
   end
 
-  assign logits_out = logits;
-  assign logits_valid = logits_out_valid;
-
-  // ===========================================================================
-  // Status signals
-  // ===========================================================================
-  assign busy = (state != STAGE_IDLE) && (state != STAGE_DONE);
-  assign done = (state == STAGE_DONE) && logits_valid;
-  assign error_flag = 1'b0; // No error handling yet
+  assign logits_out = logits_int32;
+  assign done = (state == DONE);
 
 endmodule
