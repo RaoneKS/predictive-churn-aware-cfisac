@@ -7,7 +7,7 @@ module tb_cnn_inference_top;
 
   logic clk,rst_n,start,done,window_valid,window_ready,logits_valid;
   logic signed [7:0] window_sample;
-  logic signed [31:0] logits_out[4];
+  logic signed [31:0] logits_out[0:3];
   logic [31:0] cycle_count;
 
   logic signed [7:0] c1w_mem[0:39];
@@ -22,12 +22,12 @@ module tb_cnn_inference_top;
   logic [7:0] pred_mem[0:N-1];
   logic [7:0] label_mem[0:N-1];
 
-  logic signed [7:0] c1w[5][8];
-  logic signed [31:0] c1b[8];
-  logic signed [7:0] c2w[3][8][8];
-  logic signed [31:0] c2b[8];
-  logic signed [7:0] clfw[8][4];
-  logic signed [31:0] clfb[4];
+  logic signed [7:0] c1w[0:4][0:7];
+  logic signed [31:0] c1b[0:7];
+  logic signed [7:0] c2w[0:2][0:7][0:7];
+  logic signed [31:0] c2b[0:7];
+  logic signed [7:0] clfw[0:7][0:3];
+  logic signed [31:0] clfb[0:3];
 
   integer i,j,k,w,s,c, matches,pred_matches,err_count;
   integer got_pred, best;
