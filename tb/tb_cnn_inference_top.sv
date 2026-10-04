@@ -134,10 +134,10 @@ module tb_cnn_inference_top;
       window_sample=in_mem[s];window_valid=1;@(posedge clk);window_valid=0;
     end
     wait(done);#1;
-    if(logits0!==ref_mem[0]) begin $display("ERROR: back-to-back normal mismatch c0");$finish(1);end
-    if(logits1!==ref_mem[1]) begin $display("ERROR: back-to-back normal mismatch c1");$finish(1);end
-    if(logits2!==ref_mem[2]) begin $display("ERROR: back-to-back normal mismatch c2");$finish(1);end
-    if(logits3!==ref_mem[3]) begin $display("ERROR: back-to-back normal mismatch c3");$finish(1);end
+    if(logits0!==ref_mem[0]) begin $display("ERROR: back-to-back normal mismatch c0");$fatal(1);end
+    if(logits1!==ref_mem[1]) begin $display("ERROR: back-to-back normal mismatch c1");$fatal(1);end
+    if(logits2!==ref_mem[2]) begin $display("ERROR: back-to-back normal mismatch c2");$fatal(1);end
+    if(logits3!==ref_mem[3]) begin $display("ERROR: back-to-back normal mismatch c3");$fatal(1);end
 
     @(posedge clk);start=1;@(posedge clk);start=0;
     for(s=0;s<W;s=s+1) begin
@@ -145,10 +145,10 @@ module tb_cnn_inference_top;
       window_sample=in_mem[384*W+s];window_valid=1;@(posedge clk);window_valid=0;
     end
     wait(done);#1;
-    if(logits0!==ref_mem[384*4+0]) begin $display("ERROR: back-to-back outer mismatch c0");$finish(1);end
-    if(logits1!==ref_mem[384*4+1]) begin $display("ERROR: back-to-back outer mismatch c1");$finish(1);end
-    if(logits2!==ref_mem[384*4+2]) begin $display("ERROR: back-to-back outer mismatch c2");$finish(1);end
-    if(logits3!==ref_mem[384*4+3]) begin $display("ERROR: back-to-back outer mismatch c3");$finish(1);end
+    if(logits0!==ref_mem[384*4+0]) begin $display("ERROR: back-to-back outer mismatch c0");$fatal(1);end
+    if(logits1!==ref_mem[384*4+1]) begin $display("ERROR: back-to-back outer mismatch c1");$fatal(1);end
+    if(logits2!==ref_mem[384*4+2]) begin $display("ERROR: back-to-back outer mismatch c2");$fatal(1);end
+    if(logits3!==ref_mem[384*4+3]) begin $display("ERROR: back-to-back outer mismatch c3");$fatal(1);end
 
     // Explicit same-window repeat without reset.
     @(posedge clk);start=1;@(posedge clk);start=0;
@@ -167,7 +167,7 @@ module tb_cnn_inference_top;
     wait(done);#1;
     if(logits0!==repeat_logit0 || logits1!==repeat_logit1 || logits2!==repeat_logit2 || logits3!==repeat_logit3) begin
       $display("ERROR: same-window repeat mismatch");
-      $finish(1);
+      $fatal(1);
     end
     $display("BACK_TO_BACK_TEST_PASSED");
     $display("SAME_WINDOW_REPEAT_PASSED");
@@ -179,10 +179,10 @@ module tb_cnn_inference_top;
     $display("Class 0: %0d/%0d",class_correct0,class_total0);$display("Class 1: %0d/%0d",class_correct1,class_total1);
     $display("Class 2: %0d/%0d",class_correct2,class_total2);$display("Class 3: %0d/%0d",class_correct3,class_total3);
     $display("Reference expected accuracy: 458/512 = 89.453125%%");
-    if(pred_matches!=N) begin $display("ERROR: RTL/reference prediction count is %0d, expected %0d",pred_matches,N);$finish(1);end
-    if(logit_matches!=N*4) begin $display("ERROR: Exact logits mismatch");$finish(1);end
+    if(pred_matches!=N) begin $display("ERROR: RTL/reference prediction count is %0d, expected %0d",pred_matches,N);$fatal(1);end
+    if(logit_matches!=N*4) begin $display("ERROR: Exact logits mismatch");$fatal(1);end
     $display("CNN_E2E_TEST_PASSED");$finish(0);
   end
 
-  initial begin repeat(10000000) @(posedge clk);$display("ERROR: CNN simulation timeout");$finish(1);end
+  initial begin repeat(10000000) @(posedge clk);$display("ERROR: CNN simulation timeout");$fatal(1);end
 endmodule
