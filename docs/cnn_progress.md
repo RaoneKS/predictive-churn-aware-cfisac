@@ -1,12 +1,12 @@
 # CNN Integration Progress
 
-**Status:** Production Implementation (Option C - Isolated Systolic Adapter)
+**Status:** Integration code prepared; local Icarus verification pending
 
-**Last Updated:** October 4, 2026
+**Last Updated:** October 5, 2026
 
 **Branch:** `fpga-cnn-integration`
 
-**Commit:** (To be updated after first successful run)
+**Commit:** `d54e23ff0b8f03171ed2a02cb931f74339543dc7`
 
 ## Architecture Decision
 
@@ -19,7 +19,7 @@ The validated generic accelerator architecture cannot support CNN Conv2 tile acc
 ### Solution (Option C)
 **Create isolated CNN-specific components that instantiate systolic_array directly:**
 - `rtl/cnn_systolic_adapter.sv` - thin wrapper around systolic_array for CNN scheduling
-- `rtl/cnn_inference_top.sv` - window-serial CNN pipeline with proper Conv2 accumulation
+- `rtl/cnn_inference_top.sv` - manifest-aligned scalar reference CNN pipeline; systolic adapter is instantiated as the isolated hardware integration point
 - New testbench loading authoritative vectors from `verification/cnn_vectors/` and `ml/artifacts/`
 
 **Preservation guarantee:**
@@ -29,7 +29,7 @@ The validated generic accelerator architecture cannot support CNN Conv2 tile acc
 
 ## Implementation
 
-### Files Created
+### Files / verification updates
 
 1. **rtl/cnn_systolic_adapter.sv**
    - Direct instantiation of `systolic_array.sv`
@@ -164,16 +164,16 @@ The validated generic accelerator architecture cannot support CNN Conv2 tile acc
 
 ## Known Issues / Blockers
 
-None yet. Ready for first simulation run.
+Local simulation has not been executed from this environment. The scalar reference path is intentionally kept as the independent correctness baseline; the systolic adapter must be proven tile-equivalent before replacing stage execution with it.
 
 ## Next Steps
 
-1. Run first compilation: `./verification/scripts/run_cnn_e2e.sh`
-2. If compilation fails: debug RTL
-3. If simulation fails: debug testbench data loading
-4. Load actual weight/bias artifacts into testbench
-5. Load actual test vectors
-6. Verify first 32 windows match reference
-7. Verify all 512 windows achieve 89.453125% accuracy
-8. Run generic regression: `./verification/scripts/run_icarus_regression.sh`
-9. Document final results
+1. Run `./verification/scripts/run_cnn_e2e.sh` locally and capture compile/simulation status
+2. If compilation fails: fix Icarus-compatible RTL
+3. If simulation fails: debug vector loading/arithmetic
+4. Verify exact 2048/2048 logits against authoritative vectors
+5. Verify prediction agreement is 458/512
+6. Verify first 32 windows and back-to-back cases
+7. Run generic regression and document evidence
+8. Only then replace scalar stage execution with the proven systolic adapter
+9. Re-run CNN and generic regressions, then document final results
