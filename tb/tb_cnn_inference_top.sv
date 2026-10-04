@@ -13,10 +13,33 @@ module tb_cnn_inference_top;
   logic signed [319:0] c1w_flat; logic signed [255:0] c1b_flat;
   logic signed [1535:0] c2w_flat; logic signed [255:0] c2b_flat;
   logic signed [255:0] clfw_flat; logic signed [127:0] clfb_flat;
-  integer i,j,k,w,s,c,matches,pred_matches,err_count,got_pred,best_class,got_value,ref_value,expected_pred,expected_label;
-  integer class_total0,class_total1,class_total2,class_total3;
-  integer class_correct0,class_correct1,class_correct2,class_correct3;
-  integer repeat0,repeat1,repeat2,repeat3;
+  integer i;
+  integer j;
+  integer k;
+  integer w;
+  integer s;
+  integer c;
+  integer matches;
+  integer pred_matches;
+  integer err_count;
+  integer got_pred;
+  integer best_class;
+  integer got_value;
+  integer reference_value;
+  integer expected_pred;
+  integer expected_label;
+  integer class_total0;
+  integer class_total1;
+  integer class_total2;
+  integer class_total3;
+  integer class_correct0;
+  integer class_correct1;
+  integer class_correct2;
+  integer class_correct3;
+  integer repeat_logit0;
+  integer repeat_logit1;
+  integer repeat_logit2;
+  integer repeat_logit3;
 
   cnn_inference_top dut(
     .clk(clk),.rst_n(rst_n),.start(start),.done(done),
@@ -89,10 +112,10 @@ module tb_cnn_inference_top;
       end
       wait(done);#1;
 
-      got_value=logits0;ref_value=ref_mem[w*4+0];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=0 got=%0d ref=%0d",w,got_value,ref_value);
-      got_value=logits1;ref_value=ref_mem[w*4+1];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=1 got=%0d ref=%0d",w,got_value,ref_value);
-      got_value=logits2;ref_value=ref_mem[w*4+2];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=2 got=%0d ref=%0d",w,got_value,ref_value);
-      got_value=logits3;ref_value=ref_mem[w*4+3];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=3 got=%0d ref=%0d",w,got_value,ref_value);
+      got_value=logits0;reference_value=ref_mem[w*4+0];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=0 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits1;reference_value=ref_mem[w*4+1];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=1 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits2;reference_value=ref_mem[w*4+2];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=2 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits3;reference_value=ref_mem[w*4+3];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=3 got=%0d ref=%0d",w,got_value,reference_value);
 
       best_class=0;if(logits1>logits0) best_class=1;if(logits2>logits0 && logits2>logits1) best_class=2;if(logits3>logits0 && logits3>logits1 && logits3>logits2) best_class=3;
       got_pred=best_class;expected_pred=pred_mem[w];expected_label=label_mem[w];
@@ -137,7 +160,7 @@ module tb_cnn_inference_top;
       window_sample=in_mem[s];window_valid=1;@(posedge clk);window_valid=0;
     end
     wait(done);#1;
-    repeat0=logits0;repeat1=logits1;repeat2=logits2;repeat3=logits3;
+    repeat_logit0=logits0;repeat_logit1=logits1;repeat_logit2=logits2;repeat_logit3=logits3;
 
     @(posedge clk);start=1;@(posedge clk);start=0;
     for(s=0;s<W;s=s+1) begin
@@ -145,7 +168,7 @@ module tb_cnn_inference_top;
       window_sample=in_mem[s];window_valid=1;@(posedge clk);window_valid=0;
     end
     wait(done);#1;
-    if(logits0!==repeat0 || logits1!==repeat1 || logits2!==repeat2 || logits3!==repeat3) begin
+    if(logits0!==repeat_logit0 || logits1!==repeat_logit1 || logits2!==repeat_logit2 || logits3!==repeat_logit3) begin
       $display("ERROR: same-window repeat mismatch");
       $finish(1);
     end
