@@ -19,7 +19,7 @@ module tb_cnn_inference_top;
   integer w;
   integer s;
   integer c;
-  integer matches;
+  integer logit_matches;
   integer pred_matches;
   integer err_count;
   integer got_pred;
@@ -100,7 +100,7 @@ module tb_cnn_inference_top;
 
     class_total0=0;class_total1=0;class_total2=0;class_total3=0;
     class_correct0=0;class_correct1=0;class_correct2=0;class_correct3=0;
-    matches=0;pred_matches=0;err_count=0;
+    logit_matches=0;pred_matches=0;err_count=0;
     rst_n=0;start=0;window_valid=0;window_sample=0;
     repeat(5) @(posedge clk);rst_n=1;
 
@@ -112,10 +112,10 @@ module tb_cnn_inference_top;
       end
       wait(done);#1;
 
-      got_value=logits0;reference_value=ref_mem[w*4+0];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=0 got=%0d ref=%0d",w,got_value,reference_value);
-      got_value=logits1;reference_value=ref_mem[w*4+1];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=1 got=%0d ref=%0d",w,got_value,reference_value);
-      got_value=logits2;reference_value=ref_mem[w*4+2];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=2 got=%0d ref=%0d",w,got_value,reference_value);
-      got_value=logits3;reference_value=ref_mem[w*4+3];if(got_value==reference_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=3 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits0;reference_value=ref_mem[w*4+0];if(got_value==reference_value) logit_matches=logit_matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=0 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits1;reference_value=ref_mem[w*4+1];if(got_value==reference_value) logit_matches=logit_matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=1 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits2;reference_value=ref_mem[w*4+2];if(got_value==reference_value) logit_matches=logit_matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=2 got=%0d ref=%0d",w,got_value,reference_value);
+      got_value=logits3;reference_value=ref_mem[w*4+3];if(got_value==reference_value) logit_matches=logit_matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=3 got=%0d ref=%0d",w,got_value,reference_value);
 
       best_class=0;if(logits1>logits0) best_class=1;if(logits2>logits0 && logits2>logits1) best_class=2;if(logits3>logits0 && logits3>logits1 && logits3>logits2) best_class=3;
       got_pred=best_class;expected_pred=pred_mem[w];expected_label=label_mem[w];
@@ -176,14 +176,14 @@ module tb_cnn_inference_top;
     $display("SAME_WINDOW_REPEAT_PASSED");
 
     $display("");$display("=== CNN E2E RESULT ===");$display("Windows: %0d",N);
-    $display("Exact logits: %0d/%0d",matches,N*4);
+    $display("Exact logits: %0d/%0d",logit_matches,N*4);
     $display("Prediction/reference: %0d/%0d",pred_matches,N);
     $display("True-label accuracy: %0d/%0d",class_correct0+class_correct1+class_correct2+class_correct3,N);
     $display("Class 0: %0d/%0d",class_correct0,class_total0);$display("Class 1: %0d/%0d",class_correct1,class_total1);
     $display("Class 2: %0d/%0d",class_correct2,class_total2);$display("Class 3: %0d/%0d",class_correct3,class_total3);
     $display("Reference expected accuracy: 458/512 = 89.453125%%");
     if(pred_matches!=N) begin $display("ERROR: RTL/reference prediction count is %0d, expected %0d",pred_matches,N);$finish(1);end
-    if(matches!=N*4) begin $display("ERROR: Exact logits mismatch");$finish(1);end
+    if(logit_matches!=N*4) begin $display("ERROR: Exact logits mismatch");$finish(1);end
     $display("CNN_E2E_TEST_PASSED");$finish(0);
   end
 
