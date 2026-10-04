@@ -42,19 +42,31 @@ module tb_cnn_bias_requantize;
   initial begin
     repeat(2) @(posedge clk); rst_n=1;
 
+    @(negedge clk);
     set_lane(0,1024,256); shift_amount=8; relu_en=0; enable=1; acc_valid=1;
-    @(posedge clk); acc_valid=0; @(posedge clk); @(posedge clk);
+    @(posedge clk);
+    @(negedge clk); acc_valid=0;
+    @(posedge clk); @(posedge clk);
     if (!quant_valid) begin $display("FAIL quant_valid"); $fatal; end
     check_lane(0,5);
 
+    @(negedge clk);
     set_lane(1,-100,50); shift_amount=0; relu_en=1; acc_valid=1;
-    @(posedge clk); acc_valid=0; @(posedge clk); @(posedge clk); check_lane(1,0);
+    @(posedge clk);
+    @(negedge clk); acc_valid=0;
+    @(posedge clk); @(posedge clk); check_lane(1,0);
 
+    @(negedge clk);
     set_lane(2,200,100); shift_amount=0; relu_en=0; acc_valid=1;
-    @(posedge clk); acc_valid=0; @(posedge clk); @(posedge clk); check_lane(2,127);
+    @(posedge clk);
+    @(negedge clk); acc_valid=0;
+    @(posedge clk); @(posedge clk); check_lane(2,127);
 
+    @(negedge clk);
     set_lane(3,-200,-100); acc_valid=1;
-    @(posedge clk); acc_valid=0; @(posedge clk); @(posedge clk); check_lane(3,-128);
+    @(posedge clk);
+    @(negedge clk); acc_valid=0;
+    @(posedge clk); @(posedge clk); check_lane(3,-128);
 
     $display("CNN_BIAS_REQUANT_TEST PASSED"); $finish;
   end
