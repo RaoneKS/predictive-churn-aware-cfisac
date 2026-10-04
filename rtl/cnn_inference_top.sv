@@ -73,11 +73,11 @@ module cnn_inference_top (
         end
         CONV1: begin
           for(oc=0;oc<8;oc=oc+1) begin
-            acc_tmp[oc]=conv1_bias[oc];
+            acc_tmp[oc]=$signed(conv1_bias_flat[oc*32 +: 32]);
             for(k=0;k<5;k=k+1) begin
               if((idx+k)>=2 && (idx+k)<=257) begin
                 if((idx+k-2)>=0 && (idx+k-2)<256)
-                  acc_tmp[oc]=acc_tmp[oc]+$signed(x[idx+k-2])*$signed(conv1_weights[k][oc]);
+                  acc_tmp[oc]=acc_tmp[oc]+$signed(x[idx+k-2])*$signed($signed(conv1_weights_flat[(k*8+oc)*8 +: 8]));
               end
             end
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
@@ -95,12 +95,12 @@ module cnn_inference_top (
         end
         CONV2: begin
           for(oc=0;oc<8;oc=oc+1) begin
-            acc_tmp[oc]=conv2_bias[oc];
+            acc_tmp[oc]=$signed(conv2_bias_flat[oc*32 +: 32]);
             for(k=0;k<3;k=k+1)
               for(ch=0;ch<8;ch=ch+1)
                 if((idx+k)>=1 && (idx+k)<=127) begin
                   if((idx+k-1)>=0 && (idx+k-1)<128)
-                    acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights[k][ch][oc]);
+                    acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed($signed(conv2_weights_flat[(k*64+ch*8+oc)*8 +: 8]));
                 end
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
             q_tmp=acc_tmp[oc]>>>8;
@@ -124,9 +124,9 @@ module cnn_inference_top (
         end
         CLASSIFY: begin
           for(oc=0;oc<4;oc=oc+1) begin
-            acc_tmp[oc]=classifier_bias[oc];
+            acc_tmp[oc]=$signed(classifier_bias_flat[oc*32 +: 32]);
             for(ch=0;ch<8;ch=ch+1)
-              acc_tmp[oc]=acc_tmp[oc]+$signed(gap[ch])*$signed(classifier_weights[ch][oc]);
+              acc_tmp[oc]=acc_tmp[oc]+$signed(gap[ch])*$signed($signed(classifier_weights_flat[(ch*4+oc)*8 +: 8]));
             logits[oc]<=acc_tmp[oc]>>>5;
           end
           state<=FINISH;
