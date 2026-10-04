@@ -69,12 +69,9 @@ module tb_cnn_inference_top;
           assign c1w_flat[(wk*8+wc)*8 +: 8] = c1w_mem[wc*5+wk];
         end
       end
-      for(ck=0;ck<3;ck=ck+1) begin : GEN_C2W_K
-        for(cj=0;cj<8;cj=cj+1) begin : GEN_C2W_IC
-          for(cc=0;cc<8;cc=cc+1) begin : GEN_C2W_OC
-            assign c2w_flat[(cj*3+ck)*8+cc*8 +: 8] = c2w_mem[cc*24+cj*3+ck];
-          end
-        end
+      for(ck=0;ck<192;ck=ck+1) begin : GEN_C2W_FLAT
+        assign c2w_flat[ck*8 +: 8] =
+          c2w_mem[(ck%8)*24 + ((ck/8)/3)*3 + ((ck/8)%3)];
       end
       for(cj=0;cj<8;cj=cj+1) begin : GEN_CLF_J
         for(cc=0;cc<4;cc=cc+1) begin : GEN_CLF_C
