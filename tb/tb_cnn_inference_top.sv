@@ -38,8 +38,8 @@ module tb_cnn_inference_top;
   integer i,j,k,w,s,c, matches,pred_matches,err_count;
   integer got_pred, best;
   integer got, refv;
-  integer class_total [0:3];
-  integer class_correct [0:3];
+  integer class_total0, class_total1, class_total2, class_total3;
+  integer class_correct0, class_correct1, class_correct2, class_correct3;
   integer ref_pred, ref_label;
 
   cnn_inference_top dut(
@@ -97,7 +97,8 @@ module tb_cnn_inference_top;
       for(c=0;c<4;c=c+1)
         clfw_flat[(j*4+c)*8 +: 8] = clfw_mem[c*8+j];
 
-    for(c=0;c<4;c=c+1) begin class_total[c]=0; class_correct[c]=0; end
+    class_total0=0; class_total1=0; class_total2=0; class_total3=0;
+    class_correct0=0; class_correct1=0; class_correct2=0; class_correct3=0;
     matches=0; pred_matches=0; err_count=0;
 
     rst_n=0; start=0; window_valid=0; window_sample=0;
@@ -137,8 +138,12 @@ module tb_cnn_inference_top;
         err_count=err_count+1;
         if(err_count<=20) $display("PRED MISMATCH w=%0d got=%0d ref=%0d label=%0d",w,got_pred,ref_pred,ref_label);
       end
-      class_total[ref_label]=class_total[ref_label]+1;
-      if(got_pred==ref_label) class_correct[ref_label]=class_correct[ref_label]+1;
+      case(ref_label)
+        0: begin class_total0=class_total0+1; if(got_pred==ref_label) class_correct0=class_correct0+1; end
+        1: begin class_total1=class_total1+1; if(got_pred==ref_label) class_correct1=class_correct1+1; end
+        2: begin class_total2=class_total2+1; if(got_pred==ref_label) class_correct2=class_correct2+1; end
+        3: begin class_total3=class_total3+1; if(got_pred==ref_label) class_correct3=class_correct3+1; end
+      endcase
 
       if((w%64)==63) $display("Progress: %0d/%0d windows",w+1,N);
       @(posedge clk);
@@ -149,8 +154,11 @@ module tb_cnn_inference_top;
     $display("Windows: %0d",N);
     $display("Exact logits: %0d/%0d",matches,N*4);
     $display("Prediction/reference: %0d/%0d",pred_matches,N);
-    $display("True-label accuracy: %0d/%0d",class_correct[0]+class_correct[1]+class_correct[2]+class_correct[3],N);
-    for(c=0;c<4;c=c+1) $display("Class %0d: %0d/%0d",c,class_correct[c],class_total[c]);
+    $display("True-label accuracy: %0d/%0d",class_correct0+class_correct1+class_correct2+class_correct3,N);
+    $display("Class 0: %0d/%0d",class_correct0,class_total0);
+    $display("Class 1: %0d/%0d",class_correct1,class_total1);
+    $display("Class 2: %0d/%0d",class_correct2,class_total2);
+    $display("Class 3: %0d/%0d",class_correct3,class_total3);
     $display("Reference expected accuracy: 458/512 = 89.453125%%");
 
     if(pred_matches != 458) begin
