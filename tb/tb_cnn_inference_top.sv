@@ -32,7 +32,8 @@ module tb_cnn_inference_top;
   integer i,j,k,w,s,c, matches,pred_matches,err_count;
   integer got_pred, best;
   integer got, refv;
-  integer class_total[0:3], class_correct[0:3];
+  integer class_total [0:3];
+  integer class_correct [0:3];
   integer ref_pred, ref_label;
 
   cnn_inference_top dut(
