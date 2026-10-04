@@ -75,8 +75,10 @@ module cnn_inference_top (
           for(oc=0;oc<8;oc=oc+1) begin
             acc_tmp[oc]=conv1_bias[oc];
             for(k=0;k<5;k=k+1) begin
-              if((idx+k)>=2 && (idx+k)<254)
-                acc_tmp[oc]=acc_tmp[oc]+$signed(x[idx+k-2])*$signed(conv1_weights[k][oc]);
+              if((idx+k)>=2 && (idx+k)<=257) begin
+                if((idx+k-2)>=0 && (idx+k-2)<256)
+                  acc_tmp[oc]=acc_tmp[oc]+$signed(x[idx+k-2])*$signed(conv1_weights[k][oc]);
+              end
             end
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
             q_tmp=acc_tmp[oc]>>>8;
@@ -96,8 +98,10 @@ module cnn_inference_top (
             acc_tmp[oc]=conv2_bias[oc];
             for(k=0;k<3;k=k+1)
               for(ch=0;ch<8;ch=ch+1)
-                if((idx+k)>=1 && (idx+k)<127)
-                  acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights[k][ch][oc]);
+                if((idx+k)>=1 && (idx+k)<=127) begin
+                  if((idx+k-1)>=0 && (idx+k-1)<128)
+                    acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights[k][ch][oc]);
+                end
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
             q_tmp=acc_tmp[oc]>>>8;
             if(q_tmp>127) q_tmp=127;
