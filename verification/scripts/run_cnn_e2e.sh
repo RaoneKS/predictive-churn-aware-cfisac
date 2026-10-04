@@ -32,10 +32,11 @@ iverilog -g2012 \
   -o "${SIM_DIR}/cnn_e2e.vvp" \
   2>&1 | tee "${SIM_DIR}/compile.log"
 
-if [ $? -ne 0 ]; then
+COMPILE_STATUS=${PIPESTATUS[0]}
+if [ $COMPILE_STATUS -ne 0 ]; then
   echo "ERROR: Compilation failed"
   cat "${SIM_DIR}/compile.log"
-  exit 1
+  exit $COMPILE_STATUS
 fi
 
 echo "Compilation successful"
