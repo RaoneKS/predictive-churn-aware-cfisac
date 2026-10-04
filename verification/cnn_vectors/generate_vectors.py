@@ -226,7 +226,7 @@ def reference_inference(window, manifest, ref_data):
     conv1_im2col = im2col_1d(window[None, :], 5)  # (256, 5) 
     conv1_out, conv1_acc = mac_operation(
         conv1_im2col, ref_data["conv1_w"], ref_data["conv1_b"],
-        shift_amount=5, relu_enable=True
+        shift_amount=8, relu_enable=True
     )  # (256, 8)
     
     # Max pool: 1d, stride=2
@@ -236,7 +236,7 @@ def reference_inference(window, manifest, ref_data):
     conv2_im2col = im2col_1d(pool_out, 3)  # (128, 24)
     conv2_out, conv2_acc = mac_operation(
         conv2_im2col, ref_data["conv2_w"], ref_data["conv2_b"],
-        shift_amount=6, relu_enable=True
+        shift_amount=8, relu_enable=True
     )  # (128, 8)
     
     # GAP: average over spatial dimension (128)
@@ -245,7 +245,7 @@ def reference_inference(window, manifest, ref_data):
     # Classifier: dense, 4 output channels
     logits, clf_acc = mac_operation(
         gap_out, ref_data["clf_w"], ref_data["clf_b"],
-        shift_amount=6, relu_enable=False
+        shift_amount=5, relu_enable=False
     )  # (1, 4)
     
     logits_1d = logits[0, :]  # (4,)
