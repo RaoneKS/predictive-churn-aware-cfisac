@@ -80,7 +80,7 @@ module cnn_inference_top (
             acc_tmp[oc]=$signed(conv2_bias_flat[oc*32 +: 32]);
             for(k=0;k<3;k=k+1) for(ch=0;ch<8;ch=ch+1)
               if((idx+k-1)>=0&&(idx+k-1)<P)
-                acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights_flat[(k*64+ch*8+oc)*8 +: 8]);
+                acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights_flat[(ch*3+k)*8 + oc*8 +: 8]);
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
             q_tmp=acc_tmp[oc]>>>8;
             if(q_tmp>127) q_tmp=127;
