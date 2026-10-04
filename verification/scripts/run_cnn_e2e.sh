@@ -17,6 +17,7 @@ WORK_DIR="${REPO_ROOT}/work"
 mkdir -p "$SIM_DIR" "$WORK_DIR"
 
 echo "Preparing authoritative Icarus vectors..."
+python3 "${REPO_ROOT}/verification/scripts/check_cnn_reference.py"
 python3 "${REPO_ROOT}/verification/scripts/prepare_cnn_iverilog_vectors.py"
 
 echo "Compiling CNN RTL and testbench..."
