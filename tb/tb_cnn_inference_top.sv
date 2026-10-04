@@ -13,7 +13,7 @@ module tb_cnn_inference_top;
   logic signed [319:0] c1w_flat; logic signed [255:0] c1b_flat;
   logic signed [1535:0] c2w_flat; logic signed [255:0] c2b_flat;
   logic signed [255:0] clfw_flat; logic signed [127:0] clfb_flat;
-  integer i,j,k,w,s,c,matches,pred_matches,err_count,got_pred,best,got,refv,ref_pred,ref_label;
+  integer i,j,k,w,s,c,matches,pred_matches,err_count,got_pred,best_class,got_value,ref_value,expected_pred,expected_label;
   integer class_total0,class_total1,class_total2,class_total3;
   integer class_correct0,class_correct1,class_correct2,class_correct3;
   integer repeat0,repeat1,repeat2,repeat3;
@@ -89,16 +89,16 @@ module tb_cnn_inference_top;
       end
       wait(done);#1;
 
-      got=logits0;refv=ref_mem[w*4+0];if(got==refv) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=0 got=%0d ref=%0d",w,got,refv);
-      got=logits1;refv=ref_mem[w*4+1];if(got==refv) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=1 got=%0d ref=%0d",w,got,refv);
-      got=logits2;refv=ref_mem[w*4+2];if(got==refv) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=2 got=%0d ref=%0d",w,got,refv);
-      got=logits3;refv=ref_mem[w*4+3];if(got==refv) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=3 got=%0d ref=%0d",w,got,refv);
+      got_value=logits0;ref_value=ref_mem[w*4+0];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=0 got=%0d ref=%0d",w,got_value,ref_value);
+      got_value=logits1;ref_value=ref_mem[w*4+1];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=1 got=%0d ref=%0d",w,got_value,ref_value);
+      got_value=logits2;ref_value=ref_mem[w*4+2];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=2 got=%0d ref=%0d",w,got_value,ref_value);
+      got_value=logits3;ref_value=ref_mem[w*4+3];if(got_value==ref_value) matches=matches+1;else if(w<32) $display("LOGIT MISMATCH w=%0d c=3 got=%0d ref=%0d",w,got_value,ref_value);
 
-      best=0;if(logits1>logits0) best=1;if(logits2>(best==0?logits0:logits1)) best=2;if(logits3>(best==0?logits0:(best==1?logits1:logits2))) best=3;
-      got_pred=best;ref_pred=pred_mem[w];ref_label=label_mem[w];
-      if(got_pred==ref_pred) pred_matches=pred_matches+1;else begin err_count=err_count+1;if(err_count<=20) $display("PRED MISMATCH w=%0d got=%0d ref=%0d label=%0d",w,got_pred,ref_pred,ref_label);end
-      case(ref_label)
-        0: begin class_total0=class_total0+1;if(got_pred==ref_label) class_correct0=class_correct0+1;end
+      best_class=0;if(logits1>logits0) best_class=1;if(logits2>logits0 && logits2>logits1) best_class=2;if(logits3>logits0 && logits3>logits1 && logits3>logits2) best_class=3;
+      got_pred=best_class;expected_pred=pred_mem[w];expected_label=label_mem[w];
+      if(got_pred==expected_pred) pred_matches=pred_matches+1;else begin err_count=err_count+1;if(err_count<=20) $display("PRED MISMATCH w=%0d got=%0d ref=%0d label=%0d",w,got_pred,expected_pred,expected_label);end
+      case(expected_label)
+        0: begin class_total0=class_total0+1;if(got_pred==expected_label) class_correct0=class_correct0+1;end
         1: begin class_total1=class_total1+1;if(got_pred==ref_label) class_correct1=class_correct1+1;end
         2: begin class_total2=class_total2+1;if(got_pred==ref_label) class_correct2=class_correct2+1;end
         3: begin class_total3=class_total3+1;if(got_pred==ref_label) class_correct3=class_correct3+1;end
