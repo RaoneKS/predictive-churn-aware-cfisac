@@ -31,7 +31,7 @@ def main():
             raise RuntimeError(f"No committed CWRU recording found for {label}")
         recording = paths[-1]
 
-        for window_idx in range(NUM_WINDOWS_PER_CLASS // len(LABELS)):
+        for window_idx in range(NUM_WINDOWS_PER_CLASS):
             if count >= MAX_TOTAL_WINDOWS:
                 break
             window = load_raw_window(recording, window_idx)
