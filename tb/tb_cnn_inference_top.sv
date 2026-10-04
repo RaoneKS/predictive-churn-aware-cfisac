@@ -99,9 +99,9 @@ module tb_cnn_inference_top;
       if(got_pred==expected_pred) pred_matches=pred_matches+1;else begin err_count=err_count+1;if(err_count<=20) $display("PRED MISMATCH w=%0d got=%0d ref=%0d label=%0d",w,got_pred,expected_pred,expected_label);end
       case(expected_label)
         0: begin class_total0=class_total0+1;if(got_pred==expected_label) class_correct0=class_correct0+1;end
-        1: begin class_total1=class_total1+1;if(got_pred==ref_label) class_correct1=class_correct1+1;end
-        2: begin class_total2=class_total2+1;if(got_pred==ref_label) class_correct2=class_correct2+1;end
-        3: begin class_total3=class_total3+1;if(got_pred==ref_label) class_correct3=class_correct3+1;end
+        1: begin class_total1=class_total1+1;if(got_pred==expected_label) class_correct1=class_correct1+1;end
+        2: begin class_total2=class_total2+1;if(got_pred==expected_label) class_correct2=class_correct2+1;end
+        3: begin class_total3=class_total3+1;if(got_pred==expected_label) class_correct3=class_correct3+1;end
       endcase
       if((w%64)==63) $display("Progress: %0d/%0d windows",w+1,N);
       @(posedge clk);
