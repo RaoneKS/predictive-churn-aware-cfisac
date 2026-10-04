@@ -28,6 +28,12 @@ module tb_cnn_inference_top;
   logic signed [31:0] c2b[0:7];
   logic signed [7:0] clfw[0:7][0:3];
   logic signed [31:0] clfb[0:3];
+  logic signed [319:0] c1w_flat;
+  logic signed [255:0] c1b_flat;
+  logic signed [1535:0] c2w_flat;
+  logic signed [255:0] c2b_flat;
+  logic signed [255:0] clfw_flat;
+  logic signed [127:0] clfb_flat;
 
   integer i,j,k,w,s,c, matches,pred_matches,err_count;
   integer got_pred, best;
@@ -39,9 +45,9 @@ module tb_cnn_inference_top;
   cnn_inference_top dut(
     .clk(clk),.rst_n(rst_n),.start(start),.done(done),
     .window_sample(window_sample),.window_valid(window_valid),.window_ready(window_ready),
-    .conv1_weights(c1w),.conv1_bias(c1b),
-    .conv2_weights(c2w),.conv2_bias(c2b),
-    .classifier_weights(clfw),.classifier_bias(clfb),
+    .conv1_weights_flat(c1w_flat),.conv1_bias_flat(c1b_flat),
+    .conv2_weights_flat(c2w_flat),.conv2_bias_flat(c2b_flat),
+    .classifier_weights_flat(clfw_flat),.classifier_bias_flat(clfb_flat),
     .logits_out(logits_out),.logits_valid(logits_valid),.cycle_count(cycle_count)
   );
 
@@ -63,6 +69,11 @@ module tb_cnn_inference_top;
       c1b[k]=c1b_mem[k]; c2b[k]=c2b_mem[k];
     end
     for(c=0;c<4;c=c+1) clfb[c]=clfb_mem[c];
+    for(k=0;k<8;k=k+1) begin
+      c1b_flat[k*32 +: 32] = c1b_mem[k];
+      c2b_flat[k*32 +: 32] = c2b_mem[k];
+    end
+    for(c=0;c<4;c=c+1) clfb_flat[c*32 +: 32] = clfb_mem[c];
 
     for(k=0;k<5;k=k+1)
       for(c=0;c<8;c=c+1) c1w[k][c]=c1w_mem[c*5+k];
@@ -73,6 +84,18 @@ module tb_cnn_inference_top;
 
     for(j=0;j<8;j=j+1)
       for(c=0;c<4;c=c+1) clfw[j][c]=clfw_mem[c*8+j];
+    for(k=0;k<5;k=k+1)
+      for(c=0;c<8;c=c+1)
+        c1w_flat[(k*8+c)*8 +: 8] = c1w_mem[c*5+k];
+
+    for(k=0;k<3;k=k+1)
+      for(j=0;j<8;j=j+1)
+        for(c=0;c<8;c=c+1)
+          c2w_flat[(k*64+j*8+c)*8 +: 8] = c2w_mem[c*24+j*3+k];
+
+    for(j=0;j<8;j=j+1)
+      for(c=0;c<4;c=c+1)
+        clfw_flat[(j*4+c)*8 +: 8] = clfw_mem[c*8+j];
 
     for(c=0;c<4;c=c+1) begin class_total[c]=0; class_correct[c]=0; end
     matches=0; pred_matches=0; err_count=0;
