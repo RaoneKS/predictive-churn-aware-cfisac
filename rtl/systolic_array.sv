@@ -39,7 +39,7 @@ module systolic_array
   input  logic [ACT_WIDTH*ARRAY_ROWS-1:0] act_in_packed,
 
   // North boundary: weight inputs (one per column)
-  input  logic signed [WGT_WIDTH-1:0]   wgt_in  [ARRAY_COLS],
+  input  logic        [WGT_WIDTH-1:0]   wgt_in  [ARRAY_COLS],
 
   // Validity tracking
   input  logic                          data_valid_in,  // First valid data entering
