@@ -10,10 +10,10 @@ import pkg_accelerator::*;
 module cnn_inference_top (
   input  logic clk, input logic rst_n, input logic start, output logic done,
   input logic signed [7:0] window_sample, input logic window_valid, output logic window_ready,
-  input logic signed [7:0] conv1_weights [5][8], input logic signed [31:0] conv1_bias [8],
-  input logic signed [7:0] conv2_weights [3][8][8], input logic signed [31:0] conv2_bias [8],
-  input logic signed [7:0] classifier_weights [8][4], input logic signed [31:0] classifier_bias [4],
-  output logic signed [31:0] logits_out [4], output logic logits_valid, output logic [31:0] cycle_count
+  input logic signed [7:0] conv1_weights [0:4][0:7], input logic signed [31:0] conv1_bias [0:7],
+  input logic signed [7:0] conv2_weights [0:2][0:7][0:7], input logic signed [31:0] conv2_bias [0:7],
+  input logic signed [7:0] classifier_weights [0:7][0:3], input logic signed [31:0] classifier_bias [0:3],
+  output logic signed [31:0] logits_out [0:3], output logic logits_valid, output logic [31:0] cycle_count
 );
 
   localparam integer W=256, P=128, C=8;
@@ -32,7 +32,7 @@ module cnn_inference_top (
   logic tile_busy, tile_done, tile_ovf;
   logic [ACC_WIDTH*ARRAY_COLS-1:0] tile_acc;
   logic [ACT_WIDTH*ARRAY_ROWS-1:0] tile_act;
-  logic [WGT_WIDTH*ARRAY_ROWS-1:0] tile_w[ARRAY_ROWS];
+  logic [WGT_WIDTH*ARRAY_ROWS-1:0] tile_w[0:ARRAY_ROWS-1];
   assign tile_act='0;
   genvar tg;
   generate for (tg=0;tg<ARRAY_ROWS;tg=tg+1) begin : gen_tile_w
