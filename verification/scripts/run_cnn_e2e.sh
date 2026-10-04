@@ -17,6 +17,10 @@ WORK_DIR="${REPO_ROOT}/work"
 mkdir -p "$SIM_DIR" "$WORK_DIR"
 
 echo "Preparing authoritative Icarus vectors..."
+if [ ! -f "${REPO_ROOT}/verification/cnn_vectors/input_int8.npy" ] || [ ! -f "${REPO_ROOT}/verification/cnn_vectors/reference_logits_int8.npy" ]; then
+  echo "Authoritative .npy vectors are absent; rebuilding them from committed CWRU/model artifacts..."
+  python3 "${REPO_ROOT}/verification/scripts/build_authoritative_cnn_vectors.py"
+fi
 python3 "${REPO_ROOT}/verification/scripts/check_cnn_reference.py"
 python3 "${REPO_ROOT}/verification/scripts/prepare_cnn_iverilog_vectors.py"
 
