@@ -41,14 +41,29 @@ module tb_cnn_inference_top;
     $readmemh("sim/cnn_vectors/classifier_weights.hex",clfw_mem);
     $readmemh("sim/cnn_vectors/classifier_bias.hex",clfb_mem);
 
-    for(k=0;k<8;k=k+1) begin c1b_flat[k*32 +: 32]=c1b_mem[k]; c2b_flat[k*32 +: 32]=c2b_mem[k]; end
-    for(c=0;c<4;c=c+1) clfb_flat[c*32 +: 32]=clfb_mem[c];
-    for(k=0;k<5;k=k+1) for(c=0;c<8;c=c+1)
-      c1w_flat[(k*8+c)*8 +: 8]=c1w_mem[c*5+k];
-    for(k=0;k<3;k=k+1) for(j=0;j<8;j=j+1) for(c=0;c<8;c=c+1)
-      c2w_flat[(k*64+j*8+c)*8 +: 8]=c2w_mem[c*24+j*3+k];
-    for(j=0;j<8;j=j+1) for(c=0;c<4;c=c+1)
-      clfw_flat[(j*4+c)*8 +: 8]=clfw_mem[c*8+j];
+    genvar g;
+    generate
+      for(g=0;g<8;g=g+1) begin : GEN_C1B
+        assign c1b_flat[g*32 +: 32] = c1b_mem[g];
+        assign c2b_flat[g*32 +: 32] = c2b_mem[g];
+      end
+      for(g=0;g<4;g=g+1) begin : GEN_CLFB
+        assign clfb_flat[g*32 +: 32] = clfb_mem[g];
+      end
+    endgenerate
+
+    integer gb;
+    always @* begin
+      c1w_flat='0;
+      c2w_flat='0;
+      clfw_flat='0;
+      for(gb=0;gb<40;gb=gb+1)
+        c1w_flat[gb*8 +: 8] = c1w_mem[gb];
+      for(gb=0;gb<192;gb=gb+1)
+        c2w_flat[gb*8 +: 8] = c2w_mem[gb];
+      for(gb=0;gb<32;gb=gb+1)
+        clfw_flat[gb*8 +: 8] = clfw_mem[gb];
+    end
 
     class_total0=0;class_total1=0;class_total2=0;class_total3=0;
     class_correct0=0;class_correct1=0;class_correct2=0;class_correct3=0;
