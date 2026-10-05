@@ -62,25 +62,21 @@ module tb_cnn_inference_top;
       end
     endgenerate
   
-    genvar wk, wc, ck, cc, cj;
+    genvar wi;
     generate
-      for(wk=0;wk<5;wk=wk+1) begin : GEN_C1W_K
-        for(wc=0;wc<8;wc=wc+1) begin : GEN_C1W_C
-          assign c1w_flat[(wk*8+wc)*8 +: 8] = c1w_mem[wc*5+wk];
-        end
+      // Authoritative vector files are already flattened in manifest layout [K, output_channel].
+      // Keep the flat memory order unchanged; cnn_inference_top indexes the same layout.
+      for(wi=0;wi<40;wi=wi+1) begin : GEN_C1W
+        assign c1w_flat[wi*8 +: 8] = c1w_mem[wi];
       end
-      for(ck=0;ck<192;ck=ck+1) begin : GEN_C2W_FLAT
-        assign c2w_flat[ck*8 +: 8] =
-          // c2w_mem is [out_channel][in_channel][kernel], flattened as oc*24 + ch*3 + k.
-          // RTL expects [in_channel][kernel][out_channel].
-          c2w_mem[(ck%8)*24 + (ck/8)];
+      for(wi=0;wi<192;wi=wi+1) begin : GEN_C2W
+        assign c2w_flat[wi*8 +: 8] = c2w_mem[wi];
       end
-      for(cj=0;cj<8;cj=cj+1) begin : GEN_CLF_J
-        for(cc=0;cc<4;cc=cc+1) begin : GEN_CLF_C
-          assign clfw_flat[(cj*4+cc)*8 +: 8] = clfw_mem[cc*8+cj];
-        end
+      for(wi=0;wi<32;wi=wi+1) begin : GEN_CLFW
+        assign clfw_flat[wi*8 +: 8] = clfw_mem[wi];
       end
     endgenerate
+  
   
   initial begin clk=0;forever #5 clk=~clk;end
 
