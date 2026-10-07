@@ -10,6 +10,8 @@ calculation is implemented here.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+
 import sys
 import time
 from pathlib import Path
@@ -24,6 +26,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import numpy as np
 import streamlit as st
+
+@st.cache_resource
+def get_auto_executor():
+    return ThreadPoolExecutor(max_workers=1)
+
 
 from live_sim.engine import LiveCFISACEngine, LiveConfig
 
@@ -419,9 +426,12 @@ def init_defaults() -> None:
         "num_scenarios": 100,
         "cvar_alpha": 0.9,
         "lambda_churn": 1.0,
+        "p1_max_candidates": 20,
         "seed": 42,
         "auto_run": False,
         "auto_pause_reconfigure": True,
+        "auto_future": None,
+        "auto_next_time": 0.0,
         "sim_speed": 1.0,
     }
 
@@ -1542,30 +1552,53 @@ with st.expander("Detailed runtime history", expanded=False):
 # Auto simulation
 # ---------------------------------------------------------------------------
 
-if st.session_state.auto_run:
+auto_run_every = 0.5 if st.session_state.auto_run else None
 
-    # Advance the real simulator exactly one timestep.
-    #
-    # RECONFIGURE is a controller decision, not a reason to terminate
-    # the simulation. AUTO mode therefore continues through both KEEP
-    # and RECONFIGURE states.
 
-    new_record = engine.step_once()
+@st.fragment(run_every=auto_run_every)
+def auto_simulation_worker():
+    if not st.session_state.auto_run:
+        return
 
-    # Store the newest runtime record for diagnostics/UI state.
-    st.session_state.last_auto_record = new_record
+    executor = get_auto_executor()
+    future = st.session_state.get("auto_future")
 
-    # Speed controls the time between real simulator transitions.
-    delay = max(
-        0.20,
-        1.0 / float(st.session_state.sim_speed),
-    )
+    if future is not None:
+        if future.done():
+            try:
+                new_record = future.result()
+                st.session_state.last_auto_record = new_record
+                st.session_state.auto_future = None
 
-    time.sleep(delay)
+                delay = max(
+                    0.20,
+                    1.0 / float(st.session_state.sim_speed),
+                )
+                st.session_state.auto_next_time = (
+                    time.monotonic() + delay
+                )
 
-    # Continue automatically. The next rerun performs exactly one
-    # additional physical simulation timestep.
-    st.rerun()
+                st.rerun()
+
+            except Exception as exc:
+                st.session_state.auto_future = None
+                st.session_state.auto_run = False
+                st.error(f"Auto Run failed: {exc}")
+                return
+        else:
+            st.caption(
+                "⏳ Auto Run: P1 + Deficiency CVaR is calculating..."
+            )
+            return
+
+    if time.monotonic() < st.session_state.get("auto_next_time", 0.0):
+        return
+
+    st.session_state.auto_future = executor.submit(engine.step_once)
+    st.caption("⚙️ Auto Run: simulation step running...")
+
+
+auto_simulation_worker()
 
 
 # ---------------------------------------------------------------------------

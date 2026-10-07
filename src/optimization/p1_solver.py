@@ -219,7 +219,7 @@ def solve_p1_decomposed(
         x, y_tx, y_rx = cand["x"], cand["y_tx"], cand["y_rx"]
         cand["a"] = ap_activation(x, y_tx, y_rx)
         
-        raw_churn = total_churn_cost(prev_x, prev_y_tx, prev_y_rx, x, y_tx, y_rx)
+        raw_churn = total_churn_cost(prev_x, x, prev_y_tx, y_tx, prev_y_rx, y_rx)
         norm_churn = raw_churn / float(ref.get("churn_events", 1.0))
         churn_penalty = lambda_churn * norm_churn
         
