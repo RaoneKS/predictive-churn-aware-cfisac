@@ -343,8 +343,83 @@ def improvement_pct(proposed: float, reference: float, higher_better: bool) -> f
 
 
 # ---------------------------------------------------------------------------
-# Plotting helpers
+# Multiple-comparison correction
 # ---------------------------------------------------------------------------
+
+# Metrics excluded from Holm correction (zero variance in default config)
+_ZERO_VARIANCE_METRICS = {"qos_violations", "fronthaul"}
+
+def _apply_holm_correction(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Apply Holm-Bonferroni FWER correction to statistical_tests DataFrame.
+
+    Two families are corrected independently:
+      Family A — PUBLISHED_BASELINE_IDS (primary research comparisons)
+      Family B — INTERNAL_POLICIES minus proposed method (ablation comparisons)
+
+    Zero-variance metrics (qos_violations, fronthaul) are excluded from all
+    correction families. Their adjusted p-values remain NaN.
+
+    The raw p_value and significant_p05 columns are preserved unchanged.
+    New columns added: p_value_adjusted, significant_p05_adjusted,
+                       family, family_size, p_nan_reason (if not present).
+    """
+    try:
+        from statsmodels.stats.multitest import multipletests
+        def _holm(pvals):
+            reject, adj, _, _ = multipletests(pvals, alpha=0.05, method="holm")
+            return adj, reject
+    except ImportError:
+        def _holm(pvals):  # manual fallback
+            n = len(pvals)
+            order = np.argsort(pvals)
+            adj = np.empty(n)
+            reject = np.zeros(n, dtype=bool)
+            running_max = 0.0
+            for i, idx in enumerate(order):
+                k = n - i
+                adj_p = min(pvals[idx] * k, 1.0)
+                adj_p = max(adj_p, running_max)
+                running_max = adj_p
+                adj[idx] = adj_p
+                reject[idx] = adj[idx] < 0.05
+            return adj, reject
+
+    pub_methods   = set(PUBLISHED_BASELINE_IDS)
+    int_methods   = set(INTERNAL_POLICIES) - {PROPOSED_METHOD_NAME}
+
+    df = df.copy()
+    if "p_nan_reason" not in df.columns:
+        df["p_nan_reason"] = ""
+    if "family" not in df.columns:
+        df["family"] = None
+    if "family_size" not in df.columns:
+        df["family_size"] = None
+    if "p_value_adjusted" not in df.columns:
+        df["p_value_adjusted"] = np.nan
+    if "significant_p05_adjusted" not in df.columns:
+        df["significant_p05_adjusted"] = False
+
+    df.loc[df.reference_method.isin(pub_methods), "family"] = "A_published_baselines"
+    df.loc[df.reference_method.isin(int_methods), "family"] = "B_internal_ablations"
+
+    for family_id in ("A_published_baselines", "B_internal_ablations"):
+        fam_mask  = df.family == family_id
+        corr_mask = fam_mask & ~df.metric.isin(_ZERO_VARIANCE_METRICS) & df.p_value.notna()
+        idx = df.index[corr_mask]
+        df.loc[fam_mask, "family_size"] = int(corr_mask.sum())
+        if corr_mask.sum() > 0:
+            adj_p, reject = _holm(df.loc[idx, "p_value"].values)
+            df.loc[idx, "p_value_adjusted"] = adj_p
+            df.loc[idx, "significant_p05_adjusted"] = reject
+
+    # Mark zero-variance nan reason
+    zero_var = df.metric.isin(_ZERO_VARIANCE_METRICS) & df.p_value.isna()
+    df.loc[zero_var & (df.p_nan_reason == ""), "p_nan_reason"] = "zero_variance_difference"
+
+    return df
+
+
 
 def plot_bar_comparison(
     summaries: pd.DataFrame,
@@ -708,10 +783,18 @@ def main():
                 "n_paired_seeds": len(common),
                 "t_stat": ttest["t_stat"],
                 "p_value": ttest["p_value"],
+                "p_nan_reason": "" if ttest["t_stat"] == ttest["t_stat"] else "zero_variance_difference",
                 "significant_p05": ttest["significant_p05"],
+                "family": None,            # set by _apply_holm_correction
+                "family_size": None,
+                "p_value_adjusted": np.nan,
+                "significant_p05_adjusted": False,
             })
 
-    pd.DataFrame(stat_rows).to_csv(out / "statistical_tests.csv", index=False)
+    # Apply Holm-Bonferroni FWER correction within two pre-specified families
+    stat_df = _apply_holm_correction(pd.DataFrame(stat_rows))
+    stat_df.to_csv(out / "statistical_tests.csv", index=False)
+
 
     # ── Improvement table ─────────────────────────────────────────────────────
     imp_rows = []
