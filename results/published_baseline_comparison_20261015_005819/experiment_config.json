@@ -1,0 +1,50 @@
+{
+  "experiment_name": "published_baseline_comparison",
+  "timestamp": "2026-10-15T00:58:45.041200",
+  "git_commit": "4abcd3f5f67b03deeaad1e3576fe7a607328a192",
+  "git_branch": "baseline-comparison",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "n_seeds_requested": 3,
+  "n_seeds_completed": 3,
+  "time_blocks": 20,
+  "smoke_test": true,
+  "internal_policies": [
+    "STATIC",
+    "REACTIVE",
+    "PREDICTIVE",
+    "PREDICTIVE+CHURN",
+    "OBJECTIVE-HYSTERESIS",
+    "REACTIVE+CHURN"
+  ],
+  "published_baselines": [
+    "SUN2025_ADAPTIVE_HYSTERESIS",
+    "ELFIATOURE2023_GAP_NPC",
+    "ELFIATOURE2023_RAP_NPC",
+    "KIMCHO2024_CF_HO",
+    "OZBEK2026_GMSUA"
+  ],
+  "proposed_method": "PREDICTIVE+CHURN",
+  "config_path": "/home/raone/predictive-churn-aware-cfisac/configs/default.yaml",
+  "figures_created": 35,
+  "old_graphs_intact": true,
+  "fairness_conditions": {
+    "same_topology": true,
+    "same_mobility_seeds": true,
+    "same_time_blocks": true,
+    "same_channel_model": true,
+    "same_perf_evaluation": true,
+    "common_random_numbers": true,
+    "note": "Internal policies use run_simulation() which independently regenerates the same topology/mobility from the seed. Published baselines use the same seed-based generation."
+  },
+  "reproduction_labels": {
+    "SUN2025_ADAPTIVE_HYSTERESIS": "PAPER_INSPIRED_PROXY",
+    "ELFIATOURE2023_GAP_NPC": "PAPER_INSPIRED_PROXY",
+    "ELFIATOURE2023_RAP_NPC": "PAPER_INSPIRED_PROXY",
+    "KIMCHO2024_CF_HO": "PAPER_INSPIRED_PROXY",
+    "OZBEK2026_GMSUA": "PAPER_INSPIRED_PROXY"
+  }
+}

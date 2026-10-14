@@ -1,0 +1,48 @@
+{
+  "SUN2025_ADAPTIVE_HYSTERESIS": {
+    "label": "PAPER_INSPIRED_PROXY",
+    "paper": "Mobility Management Framework for Cooperative Cell-Free ISAC Systems",
+    "authors": "Sun et al.",
+    "doi": "https://doi.org/10.1109/JIOT.2025.3604762"
+  },
+  "ELFIATOURE2023_GAP_NPC": {
+    "label": "PAPER_INSPIRED_PROXY",
+    "paper": "Cell-Free Massive MIMO for ISAC: Access Point Operation Mode Selection and Power Control",
+    "authors": "Elfiatoure et al.",
+    "doi": "https://arxiv.org/abs/2310.09032"
+  },
+  "ELFIATOURE2023_RAP_NPC": {
+    "label": "PAPER_INSPIRED_PROXY",
+    "paper": "Cell-Free Massive MIMO for ISAC: Access Point Operation Mode Selection and Power Control",
+    "authors": "Elfiatoure et al.",
+    "doi": "https://arxiv.org/abs/2310.09032"
+  },
+  "KIMCHO2024_CF_HO": {
+    "label": "PAPER_INSPIRED_PROXY",
+    "paper": "Performance Analysis of Handover Algorithms in Scalable Cell-Free Massive MIMO Systems",
+    "authors": "Kim and Cho",
+    "doi": "https://exa.ai/library/publication/p470n3hq9mj"
+  },
+  "OZBEK2026_GMSUA": {
+    "label": "PAPER_INSPIRED_PROXY",
+    "paper": "Joint mode selection and user association for ISAC-enabled cell-free MIMO networks",
+    "authors": "\u00d6zbek and Cumal\u0131",
+    "doi": "https://doi.org/10.1016/j.phycom.2026.103132"
+  },
+  "DEMIRHAN2023_BEAMFORMING": {
+    "label": "NOT_IMPLEMENTED",
+    "paper": "Cell-Free ISAC MIMO Systems: Joint Sensing and Communication Beamforming",
+    "authors": "Demirhan and Alkhateeb",
+    "doi": "https://arxiv.org/abs/2301.11328"
+  },
+  "AMMAR2024_POMDP": {
+    "label": "NOT_IMPLEMENTED",
+    "paper": "Handoffs in User-Centric Cell-Free MIMO Networks: A POMDP Framework",
+    "authors": "Ammar et al.",
+    "doi": "https://doi.org/10.1109/TWC.2024.3371379"
+  },
+  "_proposed_method": {
+    "id": "PREDICTIVE+CHURN",
+    "note": "The PREDICTIVE+CHURN policy implements predictive, churn-aware overlapping clustering. It uses the existing Phase-2B horizon-averaged objective and churn_aware_decision (src/optimization/churn_aware.py). The full two-timescale integration (src/optimization/two_timescale.py) further wraps this with fast-timescale physical power control but uses the same slow-timescale clustering decision. PREDICTIVE+CHURN is the relevant clustering benchmark."
+  }
+}
