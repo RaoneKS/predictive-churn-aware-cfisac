@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-13",
+  "seed": 42,
+  "config": "configs/default.yaml",
+  "policies": [
+    "STATIC",
+    "REACTIVE",
+    "PREDICTIVE",
+    "PREDICTIVE+CHURN"
+  ],
+  "sensitivity_cases": [
+    "baseline",
+    "high_churn_penalty",
+    "low_churn_penalty",
+    "zero_churn_penalty",
+    "high_comm_reward"
+  ],
+  "note": "Fresh run; original result files were not overwritten."
+}
