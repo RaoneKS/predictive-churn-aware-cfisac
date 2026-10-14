@@ -1,0 +1,55 @@
+{
+  "experiment": "corrected_multiseed_four_policy_comparison",
+  "created_utc": "2026-10-12T20:20:57.817115+00:00",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "policies": [
+    "STATIC",
+    "REACTIVE",
+    "PREDICTIVE",
+    "PREDICTIVE+CHURN"
+  ],
+  "time_blocks_per_run": 100,
+  "expected_simulations": 40,
+  "completed_simulations": 40,
+  "expected_block_rows": 4000,
+  "actual_block_rows": 4000,
+  "configuration": "configs/default.yaml",
+  "configuration_sha256": "53912d3ecbb4dfc2cbae5eecb85d3cadb8fd7c7168d307e0e72a798eac9ad4b5",
+  "configured_min_rate_bps": 1000000.0,
+  "configured_tracking_error_threshold": 1.0,
+  "threshold_fix": "run_simulation passes configured communication minimum rate and tracking threshold to evaluate_cluster_performance; explicit min_rate and max_tracking_error overrides remain supported",
+  "git_commit_at_start": "370136bdb906c364da4bc3b08a4208517fe52150",
+  "git_status_before": "M results/decision_trace.csv\n M src/simulation/end_to_end.py\n?? .agents/\n?? .claude/\n?? 5G_Group_11_2026_Cell_Free_ISAC_Networks.pdf\n?? SingleCycleProcessor.zip\n?? experiments/run_multiseed_thresholds_fixed.py\n?? fix.py\n?? live_sim/engine.py.bak\n?? patch_p1_form2.py\n?? patch_p1_form3.py\n?? patch_p1_formulation.py\n?? patch_sim_ui_p1.py\n?? patch_two_timescale.py\n?? results/CFISAC_Professor_Submission_20261013.zip\n?? results/multiseed_comparison_20261013/\n?? results/professor_submission_20261013/\n?? results/reproducibility_20261013/\n?? results/research_figures_20261013/\n?? tests/test_live_sim_engine.py.bak\n?? tests/test_threshold_wiring.py",
+  "git_status_after": "M results/decision_trace.csv\n M src/simulation/end_to_end.py\n?? .agents/\n?? .claude/\n?? 5G_Group_11_2026_Cell_Free_ISAC_Networks.pdf\n?? SingleCycleProcessor.zip\n?? experiments/run_multiseed_thresholds_fixed.py\n?? fix.py\n?? live_sim/engine.py.bak\n?? patch_p1_form2.py\n?? patch_p1_form3.py\n?? patch_p1_formulation.py\n?? patch_sim_ui_p1.py\n?? patch_two_timescale.py\n?? results/CFISAC_Professor_Submission_20261013.zip\n?? results/multiseed_comparison_20261013/\n?? results/multiseed_comparison_thresholds_fixed_20261013/\n?? results/professor_submission_20261013/\n?? results/reproducibility_20261013/\n?? results/research_figures_20261013/\n?? tests/test_live_sim_engine.py.bak\n?? tests/test_threshold_wiring.py",
+  "elapsed_seconds": 27.458031508002023,
+  "decision_trace_files": [
+    "decision_trace_seed_42.csv",
+    "decision_trace_seed_43.csv",
+    "decision_trace_seed_44.csv",
+    "decision_trace_seed_45.csv",
+    "decision_trace_seed_46.csv",
+    "decision_trace_seed_47.csv",
+    "decision_trace_seed_48.csv",
+    "decision_trace_seed_49.csv",
+    "decision_trace_seed_50.csv",
+    "decision_trace_seed_51.csv"
+  ],
+  "original_shared_decision_trace_overwritten": false,
+  "aggregation": "per-seed means; aggregate mean, sample standard deviation (ddof=1), and standard error across ten seeds",
+  "metric_interpretation": {
+    "qos_violations": "Evaluator's per-block QoS violation magnitude; not a count of violating users or blocks.",
+    "tracking_violations": "Evaluator's per-block tracking violation magnitude; not a count of violating targets or blocks.",
+    "energy": "Simulation-model energy penalty/metric; not physical power measured on hardware."
+  }
+}

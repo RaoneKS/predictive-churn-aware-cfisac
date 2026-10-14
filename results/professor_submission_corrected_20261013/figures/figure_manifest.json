@@ -1,0 +1,185 @@
+{
+  "title": "Churn-Aware CFISAC Optimization: Corrected Simulation Figures",
+  "generated_on": "2026-10-13",
+  "figure_count": 30,
+  "policies": [
+    "STATIC",
+    "REACTIVE",
+    "PREDICTIVE",
+    "PREDICTIVE+CHURN"
+  ],
+  "simulation_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "source_results": "results/multiseed_comparison_thresholds_fixed_20261013/",
+  "figure_directory": "results/professor_submission_corrected_20261013/figures",
+  "configuration_sha256": "53912d3ecbb4dfc2cbae5eecb85d3cadb8fd7c7168d307e0e72a798eac9ad4b5",
+  "threshold_fix": "run_simulation passes configured communication minimum rate and tracking threshold to evaluate_cluster_performance; explicit min_rate and max_tracking_error overrides remain supported",
+  "limitations": [
+    "Simulation results, not physical hardware measurements.",
+    "QoS and tracking columns are violation magnitudes, not violation counts.",
+    "Energy is a simulation-model metric, not measured electrical power.",
+    "Results show trade-offs and do not establish universal superiority."
+  ],
+  "figures": [
+    {
+      "number": 1,
+      "filename": "01_average_user_rate.png",
+      "size_bytes": 40638
+    },
+    {
+      "number": 2,
+      "filename": "02_p5_user_rate.png",
+      "size_bytes": 41327
+    },
+    {
+      "number": 3,
+      "filename": "03_sensing_utility.png",
+      "size_bytes": 35512
+    },
+    {
+      "number": 4,
+      "filename": "04_energy_metric.png",
+      "size_bytes": 39012
+    },
+    {
+      "number": 5,
+      "filename": "05_cumulative_churn.png",
+      "size_bytes": 37983
+    },
+    {
+      "number": 6,
+      "filename": "06_reconfigurations.png",
+      "size_bytes": 40982
+    },
+    {
+      "number": 7,
+      "filename": "07_combined_objective.png",
+      "size_bytes": 42759
+    },
+    {
+      "number": 8,
+      "filename": "08_fronthaul.png",
+      "size_bytes": 39724
+    },
+    {
+      "number": 9,
+      "filename": "09_rate_timeseries.png",
+      "size_bytes": 122579
+    },
+    {
+      "number": 10,
+      "filename": "10_p5_timeseries.png",
+      "size_bytes": 122608
+    },
+    {
+      "number": 11,
+      "filename": "11_sensing_timeseries.png",
+      "size_bytes": 196432
+    },
+    {
+      "number": 12,
+      "filename": "12_energy_timeseries.png",
+      "size_bytes": 145199
+    },
+    {
+      "number": 13,
+      "filename": "13_churn_timeseries.png",
+      "size_bytes": 84998
+    },
+    {
+      "number": 14,
+      "filename": "14_objective_timeseries.png",
+      "size_bytes": 80609
+    },
+    {
+      "number": 15,
+      "filename": "15_reconfigurations_timeseries.png",
+      "size_bytes": 201847
+    },
+    {
+      "number": 16,
+      "filename": "16_rate_distribution.png",
+      "size_bytes": 44843
+    },
+    {
+      "number": 17,
+      "filename": "17_p5_distribution.png",
+      "size_bytes": 43779
+    },
+    {
+      "number": 18,
+      "filename": "18_sensing_distribution.png",
+      "size_bytes": 42243
+    },
+    {
+      "number": 19,
+      "filename": "19_energy_distribution.png",
+      "size_bytes": 50449
+    },
+    {
+      "number": 20,
+      "filename": "20_objective_distribution.png",
+      "size_bytes": 42448
+    },
+    {
+      "number": 21,
+      "filename": "21_churn_distribution.png",
+      "size_bytes": 45806
+    },
+    {
+      "number": 22,
+      "filename": "22_rate_vs_energy.png",
+      "size_bytes": 65841
+    },
+    {
+      "number": 23,
+      "filename": "23_rate_vs_churn.png",
+      "size_bytes": 59240
+    },
+    {
+      "number": 24,
+      "filename": "24_p5_vs_churn.png",
+      "size_bytes": 58622
+    },
+    {
+      "number": 25,
+      "filename": "25_sensing_vs_rate.png",
+      "size_bytes": 60496
+    },
+    {
+      "number": 26,
+      "filename": "26_tracking_violations.png",
+      "size_bytes": 45210
+    },
+    {
+      "number": 27,
+      "filename": "27_qos_violations.png",
+      "size_bytes": 47130
+    },
+    {
+      "number": 28,
+      "filename": "28_tracking_timeseries.png",
+      "size_bytes": 217665
+    },
+    {
+      "number": 29,
+      "filename": "29_qos_timeseries.png",
+      "size_bytes": 85519
+    },
+    {
+      "number": 30,
+      "filename": "30_rate_by_seed.png",
+      "size_bytes": 138814
+    }
+  ]
+}

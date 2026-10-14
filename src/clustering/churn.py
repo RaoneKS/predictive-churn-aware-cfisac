@@ -79,3 +79,51 @@ def max_raw_churn_cost(
         + c_sensing_tx * _column_max(tx_aps_per_target, num_aps) * int(num_targets)
         + c_sensing_rx * _column_max(rx_aps_per_target, num_aps) * int(num_targets)
     )
+
+
+def ap_activation(x, y_tx, y_rx):
+    """
+    Derive the AP activation variable a_m from existing associations.
+
+    a_m = 1 iff AP m participates in at least one communication,
+    sensing-TX, or sensing-RX association.
+    """
+    x = np.asarray(x, dtype=float)
+    y_tx = np.asarray(y_tx, dtype=float)
+    y_rx = np.asarray(y_rx, dtype=float)
+
+    if x.ndim != 2:
+        raise ValueError("x must be a 2-D AP-by-user matrix.")
+    if y_tx.ndim != 2:
+        raise ValueError("y_tx must be a 2-D AP-by-target matrix.")
+    if y_rx.ndim != 2:
+        raise ValueError("y_rx must be a 2-D AP-by-target matrix.")
+
+    if y_tx.shape != y_rx.shape:
+        raise ValueError(
+            "y_tx and y_rx must have identical AP-by-target shapes."
+        )
+
+    if x.shape[0] != y_tx.shape[0]:
+        raise ValueError(
+            "x, y_tx, and y_rx must use the same number of APs."
+        )
+
+    for name, arr in (
+        ("x", x),
+        ("y_tx", y_tx),
+        ("y_rx", y_rx),
+    ):
+        if not np.all(np.isin(arr, (0.0, 1.0))):
+            raise ValueError(
+                f"{name} must be binary (entries in {{0,1}})."
+            )
+
+    return (
+        (
+            np.sum(x, axis=1)
+            + np.sum(y_tx, axis=1)
+            + np.sum(y_rx, axis=1)
+        )
+        > 0.0
+    ).astype(float)

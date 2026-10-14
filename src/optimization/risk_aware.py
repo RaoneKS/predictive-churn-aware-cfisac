@@ -161,6 +161,7 @@ import numpy as np
 from src.optimization.baselines import cluster_for_positions
 from src.optimization.churn_aware import churn_aware_decision
 from src.optimization.cvar import CVaRResult, cvar_risk_adjusted_objective
+from src.optimization.deficiency_cvar import evaluate_deficiency_constraints
 from src.optimization.two_timescale import fast_update, slow_update  # noqa: F401  (fast_update re-exported for convenience)
 from src.optimization.uncertainty import generate_scenarios, measured_cv_residuals
 from src.simulation.end_to_end import _horizon_objective
@@ -222,6 +223,11 @@ def risk_aware_slow_update(
     churn_kwargs=None,
     ref=None,
     horizon_aggregation="sum",
+    enforce_deficiency_cvar=False,
+    max_comm_cvar=None,
+    max_sensing_cvar=None,
+    min_rate_bps=None,
+    epsilon_trk=None,
 ):
     """
     One risk-aware slow-timescale epoch decision.
@@ -333,7 +339,19 @@ def risk_aware_slow_update(
         pred_targets_H.shape[0], dt,
     )
 
+    from src.optimization.churn_aware import evaluate_cluster_performance
+
     gains = np.empty(num_scenarios, dtype=float)
+
+    # For CVaR deficiency evaluation
+    # We want to collect the rates and traces for the candidate across the scenario horizon.
+    # To keep things simple, we take the average rate and average trace over the horizon blocks
+    # for each scenario, matching how 'mean' horizon aggregation works, or we can just take
+    # the last step. The PDF says expected deficiency, but we are evaluating constraints.
+    # We evaluate deficiency CVaR on the mean performance over the horizon block H for each scenario.
+    scen_rates = []
+    scen_traces = []
+
     for i in range(num_scenarios):
         pu = pred_users_H + user_pert[i]
         pt = pred_targets_H + target_pert[i]
@@ -350,15 +368,40 @@ def risk_aware_slow_update(
         )
         gains[i] = cand_obj_i - prev_obj_i
 
+        if enforce_deficiency_cvar:
+            H_blocks = pu.shape[1]
+            r_acc = 0.0
+            t_acc = 0.0
+            for h in range(H_blocks):
+                u_pos = pu[:, h, :]
+                t_pos = pt[:, h, :]
+                perf = evaluate_cluster_performance(
+                    cand_x, cand_y_tx, cand_y_rx, ap_positions, u_pos, t_pos, **perf_kwargs
+                )
+                r_acc = r_acc + np.array(perf["raw_rates"])
+                t_acc = t_acc + np.array(perf["raw_traces"])
+            scen_rates.append(r_acc / H_blocks)
+            scen_traces.append(t_acc / H_blocks)
+
+    if enforce_deficiency_cvar:
+        rates_scenarios = np.array(scen_rates)
+        traces_scenarios = np.array(scen_traces)
+        deficiency_results = evaluate_deficiency_constraints(
+            rates_scenarios, traces_scenarios,
+            min_rate_bps=min_rate_bps or 0.0,
+            epsilon_trk=epsilon_trk or np.zeros(pred_targets_H.shape[0]),
+            max_comm_cvar=max_comm_cvar,
+            max_sensing_cvar=max_sensing_cvar
+        )
+        cvar_satisfied = deficiency_results["satisfied"]
+    else:
+        cvar_satisfied = True
+        deficiency_results = None
+
     # ---- The sign-domain-safe call (module Section 2) --------------------
     risk_adjusted_gain, cvar_result = cvar_risk_adjusted_objective(gains, alpha)
 
-    # Reuse churn_aware_decision COMPLETELY UNCHANGED: feed it a synthetic
-    # (current=0, predicted=risk_adjusted_gain) performance pair so that
-    # estimate_reconfiguration_gain recovers exactly risk_adjusted_gain,
-    # and the existing churn-cost formula (total_churn_cost, normalization,
-    # lambda_churn) is applied to it exactly as in Phase 6 -- nothing about
-    # churn is touched or reimplemented here.
+    # Reuse churn_aware_decision COMPLETELY UNCHANGED
     current_performance = {"combined_objective": 0.0}
     predicted_performance = {"combined_objective": float(risk_adjusted_gain)}
 
@@ -377,10 +420,19 @@ def risk_aware_slow_update(
         deterministic_prev_obj + risk_adjusted_gain
     )
 
-    if decision_info["decision"] == "RECONFIGURE":
+    if decision_info["decision"] == "RECONFIGURE" and cvar_satisfied:
         new_x, new_y_tx, new_y_rx = cand_x, cand_y_tx, cand_y_rx
     else:
         new_x, new_y_tx, new_y_rx = prev_x, prev_y_tx, prev_y_rx
+
+    # If the candidate was rejected SOLELY because of the CVaR constraints, mark it.
+    if decision_info["decision"] == "RECONFIGURE" and not cvar_satisfied:
+        decision_info["decision"] = "KEEP (CVaR Constraint Violated)"
+        decision_info["cvar_rejected"] = True
+    else:
+        decision_info["cvar_rejected"] = False
+
+    decision_info["deficiency_cvar_results"] = deficiency_results
 
     return {
         "x": new_x,
@@ -448,6 +500,11 @@ def run_risk_aware_two_timescale(
     joint_kwargs=None,
     base_seed=0,
     advance_sim=True,
+    enforce_deficiency_cvar=False,
+    max_comm_cvar=None,
+    max_sensing_cvar=None,
+    min_rate_bps=None,
+    epsilon_trk=None,
 ):
     """
     Run the full risk-aware two-timescale loop for T_total fast steps.
@@ -507,6 +564,11 @@ def run_risk_aware_two_timescale(
                 churn_kwargs=churn_kwargs,
                 ref=ref,
                 horizon_aggregation=horizon_aggregation,
+                enforce_deficiency_cvar=enforce_deficiency_cvar,
+                max_comm_cvar=max_comm_cvar,
+                max_sensing_cvar=max_sensing_cvar,
+                min_rate_bps=min_rate_bps,
+                epsilon_trk=epsilon_trk,
             )
             x, y_tx, y_rx = upd["x"], upd["y_tx"], upd["y_rx"]
 

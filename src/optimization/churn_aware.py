@@ -127,7 +127,8 @@ def evaluate_cluster_performance(
         "norm_fronthaul_penalty": float(n_front),
         
         "combined_objective": float(combined_objective),
-        "raw_rates": raw_rates.tolist()
+        "raw_rates": raw_rates.tolist(),
+        "raw_traces": [float(np.trace(c)) for c in post_covs]
     }
 
 

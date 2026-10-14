@@ -55,3 +55,14 @@ implementation in `src/`.
 
 The main research contribution is the predictive, mobility-aware and
 churn-aware clustering framework.
+
+## Research documentation
+
+The current validated results, reproducibility procedure, and paper-ready draft are maintained in:
+
+- [Results and validation](docs/RESULTS_AND_VALIDATION.md)
+- [Reproducibility guide](docs/REPRODUCIBILITY.md)
+- [Research paper draft](docs/RESEARCH_PAPER_DRAFT.md)
+
+The stored results distinguish validated evidence from future publication work. In particular, multi-seed statistical benchmarking and ablation studies are identified as the next experimental stage rather than being presented as already completed.
+

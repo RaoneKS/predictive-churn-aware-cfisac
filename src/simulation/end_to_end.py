@@ -190,11 +190,19 @@ def run_simulation(
     ref = {k: float(kwargs.get(k, v)) for k, v in config["reference_values"].items()}
 
     # Shared kwargs for evaluate_cluster_performance
+    # Use configured QoS and tracking thresholds unless explicitly overridden.
     perf_kwargs = dict(
         alpha_communication=alpha_comm,
         beta_sensing=beta_sens,
         lambda_energy=lambda_e,
         lambda_fronthaul=lambda_f,
+        min_rate=float(kwargs.get(
+            "min_rate", config["communication"]["min_rate_bps"]
+        )),
+        max_tracking_error=float(kwargs.get(
+            "max_tracking_error",
+            config["sensing"]["tracking_error_threshold"],
+        )),
         ref=ref,
     )
 

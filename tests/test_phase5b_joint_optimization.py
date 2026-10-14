@@ -2398,6 +2398,80 @@ class TestPhase5ARegression(unittest.TestCase):
             places=5,
         )
 
+    def test_tracking_accuracy_constraint_feasible(self):
+        baseline = _solve(
+            _SC,
+            alpha=1.0,
+            beta=1.0,
+        )
+
+        thresholds = (
+            np.asarray(
+                baseline["tracking_error"],
+                dtype=float,
+            )
+            + 1e-6
+        )
+
+        result = _solve(
+            _SC,
+            alpha=1.0,
+            beta=1.0,
+            tracking_error_thresholds=thresholds,
+        )
+
+        self.assertTrue(
+            result["tracking_constraint_enabled"]
+        )
+        self.assertTrue(
+            result["tracking_constraint_satisfied"]
+        )
+        self.assertTrue(
+            result["feasible"]
+        )
+
+        self.assertTrue(
+            np.all(
+                result["tracking_error"]
+                <= thresholds + 1e-8
+            )
+        )
+
+        self.assertTrue(
+            np.all(
+                result["tracking_constraint_violation"]
+                <= 1e-8
+            )
+        )
+
+    def test_tracking_accuracy_constraint_infeasible(self):
+        result = _solve(
+            _SC,
+            alpha=1.0,
+            beta=1.0,
+            tracking_error_thresholds=np.full(
+                _SC["_Q"],
+                1e-15,
+            ),
+        )
+
+        self.assertTrue(
+            result["tracking_constraint_enabled"]
+        )
+        self.assertFalse(
+            result["tracking_constraint_satisfied"]
+        )
+        self.assertFalse(
+            result["feasible"]
+        )
+
+        self.assertTrue(
+            np.any(
+                result["tracking_constraint_violation"]
+                > 0.0
+            )
+        )
+
     def test_scalar_fim_untouched(self):
         args = (
             _SC["ap_positions"],
