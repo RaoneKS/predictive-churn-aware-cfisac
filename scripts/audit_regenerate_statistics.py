@@ -9,8 +9,9 @@ Corrections applied vs original statistical_tests.csv:
      comparison families (see FAMILY DEFINITION below).
   2. Raw p-values preserved; adjusted p-values and adjusted significance flags
      added as new columns.
-  3. NaN p-values for zero-variance metrics (qos_violations, fronthaul) are
-     retained as NaN with a diagnostic reason column.
+  3. Undefined paired tests caused by zero-variance differences remain NaN.
+     QoS is eligible for correction when a valid paired test exists; fronthaul
+     is excluded from correction for this experiment's constant values.
   4. The n_paired_seeds column is verified to equal 10 for all tests with
      valid p-values.
 
@@ -20,32 +21,28 @@ FAMILY DEFINITION (Holm-Bonferroni):
   Family A — Published-baseline comparison:
     Reference methods: SUN2025_ADAPTIVE_HYSTERESIS, ELFIATOURE2023_GAP_NPC,
                        ELFIATOURE2023_RAP_NPC, KIMCHO2024_CF_HO, OZBEK2026_GMSUA
-    Metrics: avg_user_rate, p5_user_rate, sensing_utility, tracking_violations,
-             cumulative_churn, combined_objective, reconfigurations
-    (Excludes zero-variance metrics: qos_violations, fronthaul)
-    Total valid tests in Family A: 35 (5 baselines × 7 metrics)
-    Justification: These are the primary prespecified comparisons reported in
-    the research contribution. Controlling FWER within this family is appropriate
-    because each comparison is made for the same scientific question: does our
-    proposed method outperform this external baseline across key metrics?
+    Primary metrics: avg_user_rate, p5_user_rate, sensing_utility,
+                     tracking_violations, cumulative_churn, combined_objective,
+                     energy, reconfigurations
+    Total valid tests: 40 (5 baselines × 8 metrics).
 
   Family B — Internal ablation comparison:
     Reference methods: STATIC, REACTIVE, PREDICTIVE, OBJECTIVE-HYSTERESIS,
                        REACTIVE+CHURN
-    Metrics: same 7 non-zero-variance metrics as above
-    Total valid tests in Family B: 35 (5 methods × 7 metrics)
-    Justification: Internal ablation comparisons form a separate family
-    because their purpose is to characterise the contribution of each component
-    of the proposed method (churn-awareness, prediction), not to compare against
-    external literature.
+    Primary metrics: same eight metrics as Family A.
+    Total valid tests: 41 (40 primary-metric tests plus the valid
+    qos_violations comparison against STATIC).
 
-  Zero-variance metrics (qos_violations, fronthaul) are excluded from correction:
-    Both proposed and reference methods have constant values across seeds (0.0
-    and 19.0 respectively). The t-test is undefined (all differences are 0).
-    This is an artifact of the default configuration: QoS thresholds are loose
-    and fronthaul is always at capacity. These metrics produce NaN p-values and
-    are retained as NaN with explanatory diagnostic text. They are NOT included
-    in any correction family.
+  Zero-variance handling:
+    qos_violations is eligible for correction when a valid paired test exists.
+    Most methods report zero QoS violations, but STATIC has nonzero violations;
+    therefore, the proposed-method versus STATIC comparison is valid.
+    In the current data, its raw p-value is approximately 0.000271 and its
+    Family B Holm-adjusted p-value is approximately 0.008117.
+    Other QoS comparisons with zero-variance paired differences have NaN
+    p-values and are not included in correction. Fronthaul is constant at
+    19 across methods in this experiment, so its comparisons are untestable.
+    Family sizes count only valid tests with finite raw p-values.
 
 USAGE:
   python scripts/audit_regenerate_statistics.py
@@ -111,11 +108,17 @@ METRICS = [
     ("reconfigurations",    "Reconfigurations per block",   "events/block",  False),
 ]
 
-# Metrics excluded from correction families because they are zero-variance
-ZERO_VARIANCE_METRICS = {"qos_violations", "fronthaul"}
+# Metrics excluded from correction families by metric-level policy.
+# Fronthaul is excluded because it is constant in this experiment.
+# QoS is NOT excluded globally: each QoS comparison is included whenever
+# its paired test has a valid p-value. Zero-variance paired differences
+# remain NaN and are automatically omitted from Holm correction.
+ZERO_VARIANCE_METRICS = {"fronthaul"}
 
-# Non-zero-variance metrics included in correction families
-CORRECTABLE_METRICS = [k for k, *_ in METRICS if k not in ZERO_VARIANCE_METRICS]
+# Metrics eligible for correction; actual inclusion also requires a valid p-value.
+CORRECTABLE_METRICS = [
+    k for k, *_ in METRICS if k not in ZERO_VARIANCE_METRICS
+]
 
 
 def improvement_pct(proposed: float, reference: float, higher_better: bool) -> float:

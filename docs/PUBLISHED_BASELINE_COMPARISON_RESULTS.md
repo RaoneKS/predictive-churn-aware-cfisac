@@ -143,7 +143,8 @@ current objective weights. PREDICTIVE+CHURN ranks second among all methods.
 
 ## Statistical Comparison vs PREDICTIVE+CHURN (Family A, Holm-adjusted)
 
-Comparison family: 5 published baselines × 8 non-zero-variance metrics = 40 tests.
+Comparison family: 5 published baselines × 8 valid metrics = 40 tests.
+Only comparisons with zero-variance paired differences are excluded. The QoS comparison against STATIC is valid and included in Family B; other QoS comparisons and the constant fronthaul comparisons are untestable.
 Multiple-comparison correction: Holm-Bonferroni FWER control (alpha=0.05).
 All 22 raw-significant results remained significant after Holm correction.
 
@@ -239,18 +240,20 @@ PREDICTIVE+CHURN significantly outperforms G-MSUA on churn reduction (+91.8%),
 combined objective, and energy. User rate difference is not statistically
 significant.
 
-## Zero-Variance Metrics
+## Zero-Variance Metrics and QoS Violations
 
-Two metrics produced NaN t-statistics for all method comparisons:
+- **`qos_violations`**: All methods except `STATIC` report zero violations
+  across the 10 seeds. `STATIC` has nonzero violations because its cluster
+  selection is frozen while users move. PREDICTIVE+CHURN versus `STATIC` is
+  statistically testable (raw p = 0.000271; Family B Holm-adjusted p = 0.008117).
+  The other QoS comparisons have zero-variance paired differences and therefore
+  have NaN p-values.
+- **`fronthaul`**: All methods report a constant value of 19.0 across the seeds
+  in this configuration. Its paired differences have zero variance, so these
+  comparisons are not testable.
 
-- **`qos_violations`**: All methods report 0.0 across all seeds. The default
-  QoS threshold in this configuration is not binding. No t-test can be computed.
-
-- **`fronthaul`**: All methods report a constant value of 19.0 across all seeds
-  (the fronthaul load saturates at 19 links in the default configuration).
-  No t-test can be computed.
-
-These metrics are excluded from the Holm-Bonferroni correction families.
+Holm correction is applied only to valid tests with finite raw p-values. The
+corrected families contain 40 valid tests in Family A and 41 in Family B.
 
 ## Interpretation
 

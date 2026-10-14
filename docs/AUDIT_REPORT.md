@@ -46,17 +46,22 @@ Tasks performed:
 All paired t-tests use common seeds (both proposed and reference methods have all 10
 seeds: 42–51). `n_paired_seeds = 10` for all 100 tests. No seed alignment issue found.
 
-### NaN p-values
+### NaN p-values and zero-variance comparisons
 
-19 out of 100 test rows (in the original CSV) had NaN t-statistics and p-values.
-Cause confirmed: two metrics (`qos_violations`, `fronthaul`) have zero variance
-across all seeds for all methods:
+The regenerated statistical CSV contains 100 comparison rows. Some paired tests
+have NaN p-values because the paired differences have zero variance.
 
-- `qos_violations`: All methods return 0.0 (QoS threshold not binding in default config)
-- `fronthaul`: All methods return 19.0 (fronthaul saturates at 19 links)
+- `qos_violations`: All methods except `STATIC` report 0 violations across the
+  10 seeds. `STATIC` has nonzero QoS violations because its cluster selection
+  remains frozen while users move. The comparison of PREDICTIVE+CHURN against
+  `STATIC` is testable: raw p = 0.000271 and Family B Holm-adjusted p = 0.008117.
+  Other QoS comparisons have zero-variance paired differences and are not testable.
+- `fronthaul`: All methods report a constant value of 19.0 across the seeds
+  in this configuration, so the paired differences have zero variance.
 
-This is not a coding defect. The t-test is undefined when all differences are zero.
-These metrics are excluded from correction families in the corrected CSV.
+Only valid tests with finite p-values are included in Holm correction. The
+resulting correction families contain 40 valid tests in Family A and 41 in
+Family B. NaN tests are not counted in those family sizes.
 
 ---
 
@@ -86,16 +91,18 @@ Two scientifically distinct families are corrected independently:
   ELFIATOURE2023_RAP_NPC, KIMCHO2024_CF_HO, OZBEK2026_GMSUA
 - Metrics: avg_user_rate, p5_user_rate, sensing_utility, tracking_violations,
   cumulative_churn, combined_objective, energy, reconfigurations
-  (excludes zero-variance metrics: qos_violations, fronthaul)
-- Total valid tests: **40** (5 baselines × 8 metrics)
+- Total valid tests: **40** (5 baselines × 8 valid metrics; QoS and fronthaul
+  tests are excluded where their paired differences have zero variance)
 - Rationale: These are the primary prespecified comparisons. Controlling FWER
   within this family is appropriate because each comparison serves the same
   scientific question: does the proposed method outperform this external baseline?
 
 **Family B — Internal ablation comparison** (secondary, methodological family):
 - Reference methods: STATIC, REACTIVE, PREDICTIVE, OBJECTIVE-HYSTERESIS, REACTIVE+CHURN
-- Metrics: same 8 non-zero-variance metrics
-- Total valid tests: **40** (5 methods × 8 metrics)
+- Metrics: the same eight primary metrics, plus the valid QoS comparison
+  against `STATIC`
+- Total valid tests: **41** (40 primary-metric tests plus one valid QoS test;
+  remaining zero-variance comparisons are excluded)
 - Rationale: Internal ablation comparisons form a separate family because their
   purpose is to characterise component contributions, not to compare against
   external literature.
@@ -105,14 +112,14 @@ Two scientifically distinct families are corrected independently:
 | Family | Raw significant | Adjusted significant | Lost significance |
 |--------|----------------|---------------------|-------------------|
 | A (published baselines) | 22 / 40 | **22 / 40** | 0 |
-| B (internal ablations) | 22 / 40 | **14 / 40** | 8 |
+| B (internal ablations) | 23 / 41 | **15 / 41** | 8 |
 
 **Family A result:** All 22 raw-significant effects remain significant after
 Holm-Bonferroni correction in Family A. The published-baseline comparison
 findings are robust to multiplicity correction.
 
-**Family B result:** 8 tests that appeared significant at raw alpha=0.05 become
-non-significant after Holm correction in Family B (internal ablations).
+**Family B result:** 23 tests are significant at raw alpha=0.05; 15 remain
+significant after Holm correction. Eight lose significance after correction.
 
 ### Columns added to statistical_tests.csv
 
@@ -197,7 +204,7 @@ not a result fabrication.
 |---|-----------|----------|
 | A | All external baselines are PAPER_INSPIRED_PROXY (not faithful reproductions) | Documented; label correct |
 | B | Combined objective's energy weighting causes GAP-NPC to rank first despite low user rate | Not a code defect; documented in results and audit |
-| C | Zero-variance metrics (qos_violations, fronthaul) cannot be tested | Not a defect; configuration-specific saturation; documented |
+| C | Some paired comparisons have zero-variance differences | Configuration-specific: most QoS comparisons have zero differences, but the proposed method versus STATIC is testable; fronthaul remains constant at 19 |
 | D | 10 seeds provides limited statistical power for small effects | Not a defect; acknowledged in results document |
 | E | Constant-velocity mobility limits demonstration of adaptive hysteresis benefit | Known proxy limitation; documented |
 | F | DEMIRHAN2023_BEAMFORMING and AMMAR2024_POMDP not implemented | Documented as NOT_IMPLEMENTED with justification |
