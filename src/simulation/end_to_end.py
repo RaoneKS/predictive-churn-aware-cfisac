@@ -284,6 +284,42 @@ def run_simulation(
                 ap_positions, user_pos, target_pos
             )
 
+        elif policy_name in ("OBJECTIVE-HYSTERESIS", "REACTIVE+CHURN"):
+            # Transparent heuristic baselines for comparison. These are NOT
+            # claimed to be exact reproductions of any published paper.
+            x_cand, y_tx_cand, y_rx_cand = reactive_policy(
+                ap_positions, user_pos, target_pos
+            )
+            if t == 0:
+                x_curr, y_tx_curr, y_rx_curr = x_cand, y_tx_cand, y_rx_cand
+            else:
+                curr_perf = evaluate_cluster_performance(
+                    x_prev, y_tx_prev, y_rx_prev,
+                    ap_positions, user_pos, target_pos, **perf_kwargs,
+                )
+                cand_perf = evaluate_cluster_performance(
+                    x_cand, y_tx_cand, y_rx_cand,
+                    ap_positions, user_pos, target_pos, **perf_kwargs,
+                )
+                gain = float(cand_perf["combined_objective"] - curr_perf["combined_objective"])
+                if policy_name == "OBJECTIVE-HYSTERESIS":
+                    # Objective-space hysteresis suppresses small fluctuations.
+                    threshold = float(kwargs.get("hysteresis_threshold", 0.05))
+                    switch = gain > threshold
+                else:
+                    # Reactive candidate with explicit normalized switching cost.
+                    raw_churn = total_churn_cost(
+                        x_prev, x_cand, y_tx_prev, y_tx_cand, y_rx_prev, y_rx_cand,
+                        c_comm=c_comm, c_sensing_tx=c_sens_tx, c_sensing_rx=c_sens_rx,
+                    )
+                    switch = gain > lambda_c * raw_churn / float(ref["churn_events"])
+                if switch:
+                    x_curr, y_tx_curr, y_rx_curr = x_cand, y_tx_cand, y_rx_cand
+                    metrics["reconfigure_decisions"] += 1
+                else:
+                    x_curr, y_tx_curr, y_rx_curr = x_prev, y_tx_prev, y_rx_prev
+                    metrics["keep_decisions"] += 1
+
         elif policy_name == "PREDICTIVE":
             # Get full H-step predictions; cluster on the LAST predicted step
             pred_users_H, pred_targets_H = predictor.predict(sim, horizon)
@@ -364,7 +400,7 @@ def run_simulation(
 
         else:
             raise ValueError(f"Unknown policy {policy_name!r}. "
-                             "Choose STATIC, REACTIVE, PREDICTIVE, or PREDICTIVE+CHURN.")
+                             "Choose STATIC, REACTIVE, PREDICTIVE, PREDICTIVE+CHURN, OBJECTIVE-HYSTERESIS, or REACTIVE+CHURN.")
 
         # ── Churn measurement ────────────────────────────────────────────────
         if t == 0:
