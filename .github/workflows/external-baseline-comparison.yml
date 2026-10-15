@@ -1,6 +1,16 @@
 name: External-baseline comparison (reproducible run)
 
 on:
+  push:
+    branches:
+      - external-baseline-reproduction
+    paths:
+      - ".github/workflows/external-baseline-comparison.yml"
+      - "src/baselines/**"
+      - "experiments/run_published_baseline_comparison.py"
+      - "tests/test_published_baselines.py"
+      - "configs/**"
+      - "requirements.txt"
   workflow_dispatch:
     inputs:
       mode:
@@ -45,11 +55,11 @@ jobs:
         run: python -m pytest -q tests/test_published_baselines.py
 
       - name: Run quick smoke experiment
-        if: inputs.mode == 'smoke'
+        if: github.event_name == 'push' || inputs.mode == 'smoke'
         run: python -m experiments.run_published_baseline_comparison --smoke
 
       - name: Run matched-seed comparison
-        if: inputs.mode == 'full'
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'full'
         run: |
           case "${{ inputs.seeds }}" in
             ''|*[!0-9]*) echo "seeds must be a positive integer"; exit 2 ;;
