@@ -1,0 +1,68 @@
+name: External-baseline comparison (reproducible run)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "smoke = quick validation; full = all configured seeds"
+        required: true
+        type: choice
+        options:
+          - smoke
+          - full
+        default: smoke
+      seeds:
+        description: "Number of matched seeds for full mode"
+        required: true
+        default: "10"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run baseline unit tests
+        run: python -m pytest -q tests/test_published_baselines.py
+
+      - name: Run quick smoke experiment
+        if: inputs.mode == 'smoke'
+        run: python -m experiments.run_published_baseline_comparison --smoke
+
+      - name: Run matched-seed comparison
+        if: inputs.mode == 'full'
+        run: |
+          case "${{ inputs.seeds }}" in
+            ''|*[!0-9]*) echo "seeds must be a positive integer"; exit 2 ;;
+          esac
+          if [ "${{ inputs.seeds }}" -lt 2 ]; then echo "Use at least 2 seeds"; exit 2; fi
+          python -m experiments.run_published_baseline_comparison --seeds "${{ inputs.seeds }}"
+
+      - name: Upload new comparison results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfisac-baseline-comparison-${{ github.run_id }}
+          path: |
+            results/published_baseline_comparison_*/
+          if-no-files-found: warn
+          retention-days: 30
