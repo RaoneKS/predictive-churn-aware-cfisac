@@ -107,7 +107,7 @@ module inference_accelerator_top
   logic                        skew_frame_last;
 
   // --- SRAM data unpacked to weight columns ---
-  logic signed [WGT_WIDTH-1:0] wgt_cols [ARRAY_COLS];
+  logic        [WGT_WIDTH-1:0] wgt_cols [ARRAY_COLS];
 
   // --- FSM → Array ---
   logic                    fsm_array_enable;
