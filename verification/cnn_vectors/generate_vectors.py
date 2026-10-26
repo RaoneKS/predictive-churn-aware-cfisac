@@ -223,7 +223,7 @@ def reference_inference(window, manifest, ref_data):
         dict with all intermediate tensors and logits
     """
     # Conv1: kernel=5, 8 output channels
-    conv1_im2col = im2col_1d(window[None, :], 5)  # (256, 5) 
+    conv1_im2col = im2col_1d(window, 5)  # (256, 5); one input channel, five taps 
     conv1_out, conv1_acc = mac_operation(
         conv1_im2col, ref_data["conv1_w"], ref_data["conv1_b"],
         shift_amount=8, relu_enable=True
