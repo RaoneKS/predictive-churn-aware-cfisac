@@ -248,7 +248,7 @@ def reference_inference(window, manifest, ref_data):
         shift_amount=5, relu_enable=False
     )  # (1, 4)
     
-    logits_1d = logits[0, :]  # (4,)
+    logits_1d = logits[0, :4]  # Only the four logical classes; lanes 4..7 are padding
     prediction = int(np.argmax(logits_1d))
     
     return {
