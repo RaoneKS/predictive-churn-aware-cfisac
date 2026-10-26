@@ -3,9 +3,11 @@
 
 from pathlib import Path
 import numpy as np
+import json
 
 ROOT=Path(__file__).resolve().parents[2]
 V=ROOT/"verification"/"cnn_vectors"
+MANIFEST=ROOT/"ml"/"artifacts"/"accelerator_manifest.json"
 
 def main():
     pred=np.load(V/"reference_predictions.npy").astype(np.int32)
@@ -34,8 +36,15 @@ def main():
     if not np.array_equal(argmax,pred):
         bad=np.flatnonzero(argmax!=pred).tolist()
         raise SystemExit(f"ERROR: reference_predictions disagrees with logits argmax at {bad}")
-    if len(errors)!=54 or int(correct.sum())!=458:
-        raise SystemExit("ERROR: authoritative reference is not the expected 458/512 result")
+    manifest=json.loads(MANIFEST.read_text())
+    expected_accuracy=float(manifest["integer_int8_accuracy"])
+    expected_correct=int(round(expected_accuracy*len(labels)))
+    if int(correct.sum()) != expected_correct:
+        raise SystemExit(
+            f"ERROR: reference accuracy {int(correct.sum())}/{len(labels)} disagrees "
+            f"with manifest expectation {expected_correct}/{len(labels)} "
+            f"({expected_accuracy:.6%})"
+        )
 
     print("CNN_REFERENCE_CHECK_PASSED")
 
