@@ -50,11 +50,11 @@ def main():
         "reference_logits_int8.npy": np.asarray(logits, dtype=np.int32),
         "reference_predictions.npy": np.asarray(preds, dtype=np.int32),
         "reference_labels.npy": np.asarray(labels, dtype=np.int32),
-        "conv1_weights.npy": np.asarray(ref["conv1_w"], dtype=np.int8).reshape(8, 1, 5),
+        "conv1_weights.npy": np.asarray(ref["conv1_w"], dtype=np.int8),
         "conv1_bias.npy": np.asarray(ref["conv1_b"], dtype=np.int32),
-        "conv2_weights.npy": np.asarray(ref["conv2_w"], dtype=np.int8).reshape(8, 8, 3),
+        "conv2_weights.npy": np.asarray(ref["conv2_w"], dtype=np.int8),
         "conv2_bias.npy": np.asarray(ref["conv2_b"], dtype=np.int32),
-        "classifier_weights.npy": np.asarray(ref["clf_w"], dtype=np.int8).T,
+        "classifier_weights.npy": np.asarray(ref["clf_w"], dtype=np.int8),
         "classifier_bias.npy": np.asarray(ref["clf_b"], dtype=np.int32),
     }
 
@@ -64,8 +64,13 @@ def main():
 
     accuracy = int(np.sum(np.asarray(preds) == np.asarray(labels)))
     print(f"AUTHORITATIVE_REFERENCE_ACCURACY={accuracy}/512")
-    if accuracy != 458:
-        raise RuntimeError(f"Reference accuracy changed: expected 458/512, got {accuracy}/512")
+    expected_accuracy = float(manifest.get("integer_int8_accuracy", -1.0))
+    expected_correct = int(round(expected_accuracy * 512))
+    if accuracy != expected_correct:
+        raise RuntimeError(
+            f"Reference accuracy disagrees with manifest: expected {expected_correct}/512 "
+            f"({expected_accuracy:.6%}), got {accuracy}/512"
+        )
 
 if __name__ == "__main__":
     main()
