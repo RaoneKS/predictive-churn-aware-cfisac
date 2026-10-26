@@ -7,14 +7,17 @@ implementation as generate_vectors.py so CI and local verification share the
 same quantization and padding semantics.
 """
 from pathlib import Path
+import sys
 import numpy as np
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "verification" / "cnn_vectors"))
 
 from generate_vectors import (
     ARTIFACTS_DIR, DATA_DIR, LABELS, MAX_TOTAL_WINDOWS, NUM_WINDOWS_PER_CLASS,
     load_manifest, load_reference_data, load_raw_window, reference_inference,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "verification" / "cnn_vectors"
 
 def main():
@@ -50,11 +53,11 @@ def main():
         "reference_logits_int8.npy": np.asarray(logits, dtype=np.int32),
         "reference_predictions.npy": np.asarray(preds, dtype=np.int32),
         "reference_labels.npy": np.asarray(labels, dtype=np.int32),
-        "conv1_weights.npy": np.asarray(ref["conv1_w"], dtype=np.int8).reshape(8, 1, 5),
+        "conv1_weights.npy": np.asarray(ref["conv1_w"][:5, :], dtype=np.int8),
         "conv1_bias.npy": np.asarray(ref["conv1_b"], dtype=np.int32),
-        "conv2_weights.npy": np.asarray(ref["conv2_w"], dtype=np.int8).reshape(8, 8, 3),
+        "conv2_weights.npy": np.asarray(ref["conv2_w"], dtype=np.int8),
         "conv2_bias.npy": np.asarray(ref["conv2_b"], dtype=np.int32),
-        "classifier_weights.npy": np.asarray(ref["clf_w"], dtype=np.int8).T,
+        "classifier_weights.npy": np.asarray(ref["clf_w"][:, :4], dtype=np.int8),
         "classifier_bias.npy": np.asarray(ref["clf_b"], dtype=np.int32),
     }
 
@@ -64,8 +67,13 @@ def main():
 
     accuracy = int(np.sum(np.asarray(preds) == np.asarray(labels)))
     print(f"AUTHORITATIVE_REFERENCE_ACCURACY={accuracy}/512")
-    if accuracy != 458:
-        raise RuntimeError(f"Reference accuracy changed: expected 458/512, got {accuracy}/512")
+    expected_accuracy = float(manifest.get("integer_int8_accuracy", -1.0))
+    expected_correct = int(round(expected_accuracy * 512))
+    if accuracy != expected_correct:
+        raise RuntimeError(
+            f"Reference accuracy disagrees with manifest: expected {expected_correct}/512 "
+            f"({expected_accuracy:.6%}), got {accuracy}/512"
+        )
 
 if __name__ == "__main__":
     main()

@@ -27,6 +27,9 @@ jobs:
       - name: Check authoritative reference
         run: python3 verification/scripts/check_cnn_reference.py
 
+      - name: Prepare DE10 board ROM images
+        run: python3 verification/scripts/prepare_de10_model_data.py
+
       - name: Generic accelerator regression
         run: ./verification/scripts/run_icarus_regression.sh
 
