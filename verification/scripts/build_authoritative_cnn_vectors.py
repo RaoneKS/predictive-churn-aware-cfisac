@@ -53,11 +53,11 @@ def main():
         "reference_logits_int8.npy": np.asarray(logits, dtype=np.int32),
         "reference_predictions.npy": np.asarray(preds, dtype=np.int32),
         "reference_labels.npy": np.asarray(labels, dtype=np.int32),
-        "conv1_weights.npy": np.asarray(ref["conv1_w"], dtype=np.int8),
+        "conv1_weights.npy": np.asarray(ref["conv1_w"][:5, :], dtype=np.int8),
         "conv1_bias.npy": np.asarray(ref["conv1_b"], dtype=np.int32),
         "conv2_weights.npy": np.asarray(ref["conv2_w"], dtype=np.int8),
         "conv2_bias.npy": np.asarray(ref["conv2_b"], dtype=np.int32),
-        "classifier_weights.npy": np.asarray(ref["clf_w"], dtype=np.int8),
+        "classifier_weights.npy": np.asarray(ref["clf_w"][:, :4], dtype=np.int8),
         "classifier_bias.npy": np.asarray(ref["clf_b"], dtype=np.int32),
     }
 
