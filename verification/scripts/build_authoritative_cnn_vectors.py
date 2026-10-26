@@ -7,14 +7,17 @@ implementation as generate_vectors.py so CI and local verification share the
 same quantization and padding semantics.
 """
 from pathlib import Path
+import sys
 import numpy as np
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "verification" / "cnn_vectors"))
 
 from generate_vectors import (
     ARTIFACTS_DIR, DATA_DIR, LABELS, MAX_TOTAL_WINDOWS, NUM_WINDOWS_PER_CLASS,
     load_manifest, load_reference_data, load_raw_window, reference_inference,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "verification" / "cnn_vectors"
 
 def main():
