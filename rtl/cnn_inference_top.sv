@@ -82,7 +82,7 @@ module cnn_inference_top (
             // Iterate channel first, then kernel position to match [K, output_channel] weights.
             for(ch=0;ch<8;ch=ch+1) for(k=0;k<3;k=k+1)
               if((idx+k-1)>=0&&(idx+k-1)<P)
-                acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights_flat[(ch*3+k)*8 + oc*8 +: 8]);
+                acc_tmp[oc]=acc_tmp[oc]+$signed(pool[idx+k-1][ch])*$signed(conv2_weights_flat[((ch*3+k)*8 + oc)*8 +: 8]);
             if(acc_tmp[oc]<0) acc_tmp[oc]=0;
             q_tmp=acc_tmp[oc]>>>8;
             if(q_tmp>127) q_tmp=127;
@@ -113,7 +113,19 @@ module cnn_inference_top (
             log_tmp2=log_tmp2+$signed(gap[ch])*$signed(classifier_weights_flat[(ch*4+2)*8 +: 8]);
             log_tmp3=log_tmp3+$signed(gap[ch])*$signed(classifier_weights_flat[(ch*4+3)*8 +: 8]);
           end
-          logits0<=log_tmp0>>>5;logits1<=log_tmp1>>>5;logits2<=log_tmp2>>>5;logits3<=log_tmp3>>>5;
+          // Match the reference model's arithmetic shift and INT8 saturation.
+          q_tmp=log_tmp0>>>5;
+          if(q_tmp>127) q_tmp=127; else if(q_tmp< -128) q_tmp=-128;
+          logits0<=q_tmp;
+          q_tmp=log_tmp1>>>5;
+          if(q_tmp>127) q_tmp=127; else if(q_tmp< -128) q_tmp=-128;
+          logits1<=q_tmp;
+          q_tmp=log_tmp2>>>5;
+          if(q_tmp>127) q_tmp=127; else if(q_tmp< -128) q_tmp=-128;
+          logits2<=q_tmp;
+          q_tmp=log_tmp3>>>5;
+          if(q_tmp>127) q_tmp=127; else if(q_tmp< -128) q_tmp=-128;
+          logits3<=q_tmp;
           state<=FINISH;
         end
         FINISH: state<=IDLE;
