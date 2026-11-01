@@ -50,9 +50,10 @@ module cnn_inference_top (
   logic signed [31:0] partial_sum[0:7];
 
   integer idx, tile_idx;
-  integer oc, k, ch, sp;
+  integer oc, k, ch;
   integer input_index, flat_k, src_ch, kernel_pos;
   integer acc_tmp[0:7], sum_tmp[0:7];
+  logic signed [31:0] gap_acc[0:7];
   integer q_tmp, log_tmp, map_value;
 
   // Constant 24-entry mapping replaces runtime divide/modulo-by-3 logic.
@@ -123,6 +124,7 @@ module cnn_inference_top (
       for (oc=0; oc<C; oc=oc+1) begin
         gap[oc] <= 0;
         partial_sum[oc] <= 0;
+        gap_acc[oc] <= 0;
       end
     end else begin
       cycle_count <= cycle_count + 1'b1;
@@ -251,6 +253,8 @@ module cnn_inference_top (
               tile_idx <= 0;
               if (idx == P-1) begin
                 idx <= 0;
+                for (ch=0; ch<C; ch=ch+1)
+                  gap_acc[ch] <= 0;
                 state <= GAP;
               end else begin
                 idx <= idx + 1;
@@ -260,18 +264,28 @@ module cnn_inference_top (
           end
         end
 
+        // Sequential GAP: accumulate one spatial position per cycle.
+        // This replaces an unrolled 128-term combinational adder chain per
+        // channel with eight 32-bit accumulators and eight adders.
         GAP: begin
           for (ch=0; ch<C; ch=ch+1) begin
-            sum_tmp[ch] = 0;
-            for (sp=0; sp<P; sp=sp+1)
-              sum_tmp[ch] = sum_tmp[ch] + $signed(c2[sp][ch]);
-            // Conv2 has ReLU, so the GAP sum is nonnegative.
-            q_tmp = sum_tmp[ch] >>> 7;
-            if (q_tmp > 127) q_tmp = 127;
-            if (q_tmp < -128) q_tmp = -128;
-            gap[ch] <= q_tmp[7:0];
+            sum_tmp[ch] = $signed(gap_acc[ch]) + $signed(c2[idx][ch]);
+            gap_acc[ch] <= sum_tmp[ch];
+            if (idx == P-1) begin
+              // Include the current (last) sample before applying /128.
+              // Conv2 has ReLU, so the GAP sum is nonnegative.
+              q_tmp = sum_tmp[ch] >>> 7;
+              if (q_tmp > 127) q_tmp = 127;
+              if (q_tmp < -128) q_tmp = -128;
+              gap[ch] <= q_tmp[7:0];
+            end
           end
-          state <= CLASSIFIER_SETUP;
+          if (idx == P-1) begin
+            idx <= 0;
+            state <= CLASSIFIER_SETUP;
+          end else begin
+            idx <= idx + 1;
+          end
         end
 
         // Dense classifier: K=8, four logical output columns.
